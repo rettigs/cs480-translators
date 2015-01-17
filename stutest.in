@@ -1,0 +1,75 @@
+." Exercise 1:"
+cr
+." Hello World\n"
+cr
+cr
+." Exercise 2:"
+cr
+7 3 5 * 12 / - 10 + .
+cr
+cr
+." Exercise 3:"
+cr
+7.0e 3.0e 5.0e f* 12.0e f/ f- 10.0e f+ f.
+cr
+cr
+." Exercise 4:"
+cr
+7.0e0 3.0e0 5.0e0 f* 12.0e0 f/ f- 10.0e0 f+ f.
+cr
+cr
+." Exercise 5:"
+cr
+7.0e0 3.0e0 5 s>f f* 12 s>f f/ f- 10 s>f f+ f.
+cr
+cr
+." Exercise 6:"
+cr
+: x 7.0e0 ;
+: y 10 ;
+x 3.0e0 5 s>f f* 12 s>f f/ f- y s>f f+ f.
+cr
+cr
+." Exercise 7:"
+cr
+: func7
+    5 3 < if
+        7
+    else
+        2
+    endif ;
+func7 .
+cr
+cr
+." Exercise 8:"
+cr
+: func8
+    5 3 < if
+        7
+    else
+        2
+    endif ;
+func8 .
+cr
+cr
+." Exercise 9:"
+cr
+: func9
+    5 1 + 0 ?do
+        i .
+    loop ;
+func9
+cr
+cr
+." Exercise 10: (Using '10' as input)"
+cr
+: fact dup 0 <= if drop 1 else dup 1 - recurse * endif ;
+10 dup .
+cr
+cr
+." Exercise 11: (Using '10' as input)"
+cr
+: fib dup 0 = if drop 0 else dup 1 = if drop 1 else dup 1 - recurse swap 2 - recurse + endif endif ;
+10 fib .
+cr
+bye
