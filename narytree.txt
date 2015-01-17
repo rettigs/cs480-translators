@@ -1,0 +1,27 @@
+class node:
+    value = ""
+    children = []
+    id = ""
+    timesseen = 0
+
+assign id to each node
+
+# times seen pass
+traverse_seen(node):
+    node.timesseen++
+    for child in node.children:
+        traverse_seen(child)
+
+# expression creation pass
+traverse_add(node):
+    node.timesseen--
+    if node.timesseen == 0:
+        expression.append(node.value)
+    for child in node.children:
+        expression.extend(traverse(child))
+
+expression = []
+traverse_seen(root)
+traverse_add(root)
+
+print expression
