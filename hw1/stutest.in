@@ -44,7 +44,7 @@ cr
 ." Exercise 8:"
 cr
 : func8
-    5 3 < if
+    5 3 > if
         7
     else
         2
