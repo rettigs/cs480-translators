@@ -26,6 +26,12 @@ class Token(object):
     def __repr__(self):
         return "<{} \"{}\">".format(self.t, self.v)
 
+class State(object):
+    def __init__(self, number, tokentype, transitions):
+        self.number = number # The state's number
+        self.tokentype = tokentype # The type of token this state produces if it's an accept/final state (None for reject state)
+        self.transitions = transitions # A dict that maps sets of input chars to other states
+
 # Constants
 BUF_SIZE = 4096
 
@@ -59,8 +65,65 @@ def main():
             "not"]
 
     # Character sets
-    letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
-    digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    letters = ("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
+    digits = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+
+    # States of DFA
+    states = {}
+    addState(states, State(0, None, {
+            ('+'): 1,
+            ('-'): 2,
+            ('*'): 3,
+            ('/'): 4,
+            ('%'): 5,
+            ('^'): 6,
+            ('='): 7,
+            ('<'): 8,
+            ('>'): 10,
+            ('!'): 12,
+            (':'): 14,
+            ('('): 16,
+            (')'): 17,
+            ('\''): 18,
+            ('"'): 20,
+            letters: 22,
+            digits: 23,
+            ('.'): 25
+    }))
+    addState(states, State(1, 'op', {}))
+    addState(states, State(2, 'op', {}))
+    addState(states, State(3, 'op', {}))
+    addState(states, State(4, 'op', {}))
+    addState(states, State(5, 'op', {}))
+    addState(states, State(6, 'op', {}))
+    addState(states, State(7, 'op', {}))
+    addState(states, State(8, 'op', {('='): 9}))
+    addState(states, State(9, 'op', {}))
+    addState(states, State(10, 'op', {('='): 11}))
+    addState(states, State(11, 'op', {}))
+    addState(states, State(12, None, {('='): 13}))
+    addState(states, State(13, 'op', {}))
+    addState(states, State(14, None, {('='): 15}))
+    addState(states, State(15, 'op', {}))
+    addState(states, State(16, 'op', {}))
+    addState(states, State(17, 'op', {}))
+    addState(states, State(18, None, {(''): 18, ('\''): 19}))
+    addState(states, State(19, 'string', {}))
+    addState(states, State(20, None, {(''): 20, ('"'): 21}))
+    addState(states, State(21, 'string', {}))
+    addState(states, State(22, 'id', {letters+digits+("_",): 22}))
+    addState(states, State(23, 'int', {digits: 23, ('i'): 24, ('.'): 26}))
+    addState(states, State(24, 'int', {}))
+    addState(states, State(25, None, {digits: 26}))
+    addState(states, State(26, 'real', {digits: 26, ('f'): 33, ('d'): 30, ('e'): 27}))
+    addState(states, State(27, None, {digits: 29, ('+', '-'): 28}))
+    addState(states, State(28, None, {digits: 29}))
+    addState(states, State(29, 'real', {('f'): 33, ('d'): 30}))
+    addState(states, State(30, 'real', {('f'): 32, ('d'): 31}))
+    addState(states, State(31, 'real', {}))
+    addState(states, State(32, 'real', {}))
+    addState(states, State(33, 'real', {('f'): 34}))
+    addState(states, State(34, 'real', {}))
 
     # Defaults
     infile = sys.stdin
@@ -94,7 +157,7 @@ def main():
         infile = open(infilename, 'r')
 
     # Tokenize input
-    tokens = tokenize(infile, keywords, letters, digits)
+    tokens = tokenize(infile, keywords, states)
     
     # Clean up input file
     infile.close()
@@ -120,99 +183,39 @@ def usage():
     print '\t-d\tenable debug messages; use -dd for more even more messages'
     sys.exit(2)
 
-def fail(line, column, char):
-    print "Lexing error on line {}, column {}: char '{}' not in language.".format(line, column, char)
+def fail(line, column, lexeme, char):
+    print "Lexing error on line {}, column {} : char '{}' can't come after lexeme '{}'.".format(line, column, char, lexeme)
     sys.exit(2)
 
-def tokenize(infile, keywords, letters, digits):
+def tokenize(infile, keywords, states):
     """Returns a list of Tokens."""
     tokens = []
     code = infile.read()
     counter = 0
     lexeme = ""
-    tokentype = None
-    accept = None
-    state = 0
+    state = states[0]
     line = 1
     column = 1
     while counter < len(code):
         char = code[counter]
-        lexeme += char
-        if char in [' ', '\t', '\n']:
-            if lexeme != "":
-                tokens.append(Token(tokentype, lexeme[:-1]))
-                lexeme = ""
-                state = 0
-                tokentype = None
-            if char == '\n':
-                line += 1
-                column = 1
-        elif state == 0:
-            if char == '+': state = 1; tokentype = 'op'
-            elif char == '-': state = 2; tokentype = 'op'
-            elif char == '*': state = 3; tokentype = 'op'
-            elif char == '/': state = 4; tokentype = 'op'
-            elif char == '%': state = 5; tokentype = 'op'
-            elif char == '^': state = 6; tokentype = 'op'
-            elif char == '=': state = 7; tokentype = 'op'
-            elif char == '<': state = 8; tokentype = 'op'
-            elif char == '>': state = 10; tokentype = 'op'
-            elif char == '!': state = 12; tokentype = 'op'
-            elif char == ':': state = 14; tokentype = 'op'
-            elif char == '(': state = 16; tokentype = 'op'
-            elif char == ')': state = 17; tokentype = 'op'
-            elif char == '\'': state = 18; tokentype = 'string'
-            elif char == '"': state = 20; tokentype = 'string'
-            elif char in letters: state = 22; tokentype = 'id'
-            elif char in digits: state = 23; tokentype = 'int'
-            elif char == '.': state = 25; tokentype = 'real'
-            else: fail(line, column, char)
-        elif state == 23:
-            if char == 'i': state = 24
-            elif char == '.': state = 26; tokentype = 'real'
-            elif char in digits: state = 23
-            else: accept = True;
-        elif state == 24:
-            accept = True;
-        elif state == 25:
-            if char in digits: state = 26
-            else: accept = False
-        elif state == 26:
-            if char == 'f': state = 33
-            elif char == 'd': state = 30
-            elif char =='e': state = 27
-            elif char in digits: state = 26
-            else: accept = True;
-        elif state == 27:
-            if char in ['+', '-']: state = 28
-            elif char in digits: state = 29
-            else: accept = False
-        elif state == 28:
-            if char in digits: state = 29
-            else: accept = False
-        elif state == 29:
-            if char == 'f': state = 33
-            elif char == 'd': state = 30
-            else: accept = True;
-        elif state == 30:
-            if char == 'f': state = 32
-            elif char == 'd': state = 31
-            else: accept = True;
-        elif state == 31:
-            accept = True;
-        elif state == 32:
-            accept = True;
-        elif state == 33:
-            if char == 'f': state = 34
-            else: accept = True;
-        elif state == 34:
-            accept = True;
+        for matchset, matchstate in state.transitions.iteritems():
+            if char in matchset:
+                lexeme += char
+                counter += 1
+                nextstate = states[matchstate]
+                break
+        else: # This happens if none of the state's transitions could handle the char
+            if state.tokentype is not None: # If it's an accept/final state
+                tokens.append(Token(state.tokentype, lexeme)) # Houston, we have a token
+            else: # If it's a reject state
+                fail(line, column, lexeme, char) # <insert sad trombone>
 
-        counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
-
-        counter += 1
+        state = nextstate
 
     return tokens
+
+def addState(states, state):
+    states[state.number] = state
 
 if __name__ == '__main__':
     main()
