@@ -193,7 +193,7 @@ def addState(states, state):
     states[state.number] = state
 
 def fail(line, column, lexeme, char):
-    print "Lexing error on line {}, column {} : char '{}' can't come after lexeme '{}'.".format(line, column, char, lexeme)
+    print "Lexing error on line {}, column {}: char '{}' can't come after lexeme '{}'.".format(line, column, char, lexeme)
     sys.exit(2)
 
 def tokenize(infile, keywords, states):
@@ -210,36 +210,36 @@ def tokenize(infile, keywords, states):
         if char == '\n':
             line += 1
             column = 1
-        if state == states[19] or state == states[21]: # Special case for strings, since they are lexed differently.
-            lexeme += char
-            counter += 1
-            continue
-        else:
-            if char in (' ', '\t', '\n'):
-                if state == states[0]:
-                    counter += 1
-                else:
-                    if state.tokentype is not None: # If it's an accept/final state
-                        tokens.append(Token(state.tokentype, lexeme)) # Houston, we have a token
-                        lexeme = ""
-                        nextstate = states[0] # Start over from the top of the DFA
-                        counter += 1
-                    else: # If it's a reject state
-                        fail(line, column, lexeme, char) # <insert sad trombone>
+        if char in (' ', '\t', '\n') and state != states[18] and state != states[20]: # Don't lex whitespace differently in strings
+            if state == states[0]:
+                counter += 1; column += 1
             else:
-                for matchset, matchstate in state.transitions.iteritems():
-                    if char in matchset:
-                        lexeme += char
-                        counter += 1
-                        nextstate = states[matchstate]
-                        break
-                else: # This happens if none of the state's transitions could handle the char
-                    if state.tokentype is not None: # If it's an accept/final state
-                        tokens.append(Token(state.tokentype, lexeme)) # Houston, we have a token
-                        lexeme = ""
-                        nextstate = states[0] # Start over from the top of the DFA
-                    else: # If it's a reject state
-                        fail(line, column, lexeme, char) # <insert sad trombone>
+                if state.tokentype is not None: # If it's an accept/final state
+                    tokens.append(Token(state.tokentype, lexeme)) # Houston, we have a token
+                    lexeme = ""
+                    nextstate = states[0] # Start over from the top of the DFA
+                    counter += 1; column += 1
+                else: # If it's a reject state
+                    fail(line, column, lexeme, char) # <insert sad trombone>
+        else:
+            for matchset, matchstate in state.transitions.iteritems():
+                if char in matchset:
+                    lexeme += char
+                    counter += 1; column += 1
+                    nextstate = states[matchstate]
+                    break
+            else: # This happens if none of the state's transitions could handle the char
+                print state
+                if state == states[18] or state == states[20]: # If lexing a string, add the char anyway
+                    lexeme += char
+                    counter += 1; column += 1
+                    nextstate = state
+                elif state.tokentype is not None: # If it's an accept/final state
+                    tokens.append(Token(state.tokentype, lexeme)) # Houston, we have a token
+                    lexeme = ""
+                    nextstate = states[0] # Start over from the top of the DFA
+                else: # If it's a reject state
+                    fail(line, column, lexeme, char) # <insert sad trombone>
 
         state = nextstate
 
