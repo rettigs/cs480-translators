@@ -32,6 +32,12 @@ class State(object):
         self.tokentype = tokentype # The type of token this state produces if it's an accept/final state (None for reject state)
         self.transitions = transitions # A dict that maps sets of input chars to other states
 
+    def __str__(self):
+        return "State({})".format(self.number)
+
+    def __repr__(self):
+        return "{}".format(self.number)
+
 # Constants
 BUF_SIZE = 4096
 
@@ -183,6 +189,9 @@ def usage():
     print '\t-d\tenable debug messages; use -dd for more even more messages'
     sys.exit(2)
 
+def addState(states, state):
+    states[state.number] = state
+
 def fail(line, column, lexeme, char):
     print "Lexing error on line {}, column {} : char '{}' can't come after lexeme '{}'.".format(line, column, char, lexeme)
     sys.exit(2)
@@ -198,24 +207,38 @@ def tokenize(infile, keywords, states):
     column = 1
     while counter < len(code):
         char = code[counter]
-        for matchset, matchstate in state.transitions.iteritems():
-            if char in matchset:
-                lexeme += char
+        if char == '\n':
+            line += 1
+            column = 1
+        if char in (' ', '\t', '\n'):
+            if state == states[0]:
                 counter += 1
-                nextstate = states[matchstate]
-                break
-        else: # This happens if none of the state's transitions could handle the char
-            if state.tokentype is not None: # If it's an accept/final state
-                tokens.append(Token(state.tokentype, lexeme)) # Houston, we have a token
-            else: # If it's a reject state
-                fail(line, column, lexeme, char) # <insert sad trombone>
+            else:
+                if state.tokentype is not None: # If it's an accept/final state
+                    tokens.append(Token(state.tokentype, lexeme)) # Houston, we have a token
+                    lexeme = ""
+                    nextstate = states[0] # Start over from the top of the DFA
+                    counter += 1
+                else: # If it's a reject state
+                    fail(line, column, lexeme, char) # <insert sad trombone>
+        else:
+            for matchset, matchstate in state.transitions.iteritems():
+                if char in matchset:
+                    lexeme += char
+                    counter += 1
+                    nextstate = states[matchstate]
+                    break
+            else: # This happens if none of the state's transitions could handle the char
+                if state.tokentype is not None: # If it's an accept/final state
+                    tokens.append(Token(state.tokentype, lexeme)) # Houston, we have a token
+                    lexeme = ""
+                    nextstate = states[0] # Start over from the top of the DFA
+                else: # If it's a reject state
+                    fail(line, column, lexeme, char) # <insert sad trombone>
 
         state = nextstate
 
     return tokens
-
-def addState(states, state):
-    states[state.number] = state
 
 if __name__ == '__main__':
     main()
