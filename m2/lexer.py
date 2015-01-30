@@ -26,14 +26,41 @@ class Token(object):
     def __repr__(self):
         return "<{} \"{}\">".format(self.t, self.v)
 
+# Constants
+BUF_SIZE = 4096
+
 # Globals
 debug = 0
 verbose = 0
 
 def main():
 
-    # Token types
-    token = {}
+    # Keywords
+    keywords = [
+            # Types
+            "bool",
+            "int",
+            "real",
+            "string",
+            # Built-in functions
+            "sin",
+            "cos",
+            "tan",
+            # Statements
+            "stdout",
+            "if",
+            "while",
+            "let",
+            # Logic
+            "true",
+            "false",
+            "and",
+            "or",
+            "not"]
+
+    # Character sets
+    letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+    digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
     # Defaults
     infile = sys.stdin
@@ -62,19 +89,24 @@ def main():
         else:
             usage()
 
-    # Read file
+    # Open input file
     if infilename is not None:
         infile = open(infilename, 'r')
-    code = readFile(infile)
-    infile.close()
 
     # Tokenize input
-    #tokens = ???
+    tokens = tokenize(infile, keywords, letters, digits)
+    
+    # Clean up input file
+    infile.close()
 
-    # Write output
+    # Open output file
     if outfilename is not None:
         outfile = open(outfilename+".tmp", 'w')
-    writeFile(outfile, tokens)
+
+    # Write output
+    outfile.write(str(tokens) + '\n')
+
+    # Clean up output file
     outfile.close()
     if outfilename is not None:
         os.rename(outfilename+".tmp", outfilename)
@@ -88,11 +120,96 @@ def usage():
     print '\t-d\tenable debug messages; use -dd for more even more messages'
     sys.exit(2)
 
-def readFile(infile):
-    return infile.read()
+def fail(line, column, char):
+    print "Lexing error on line {}, column {}: char '{}' not in language.".format(line, column, char)
+    sys.exit(2)
 
-def writeFile(outfile, tokens):
-    outfile.write(tokens)
+def tokenize(infile, keywords, letters, digits):
+    """Returns a list of Tokens."""
+    tokens = []
+    code = infile.read()
+    counter = 0
+    lexeme = ""
+    tokentype = None
+    state = 0
+    line = 1
+    column = 1
+    while counter < len(code):
+        char = code[counter]
+        lexeme += char
+        if char in [' ', '\t', '\n']:
+            if lexeme != "":
+                tokens.append(Token(tokentype, lexeme[:-1]))
+                lexeme = ""
+                state = 0
+                tokentype = None
+            if char == '\n':
+                line += 1
+                column = 1
+        elif state == 0:
+            if char == '+': state = 1; tokentype = 'op'
+            elif char == '-': state = 2; tokentype = 'op'
+            elif char == '*': state = 3; tokentype = 'op'
+            elif char == '/': state = 4; tokentype = 'op'
+            elif char == '%': state = 5; tokentype = 'op'
+            elif char == '^': state = 6; tokentype = 'op'
+            elif char == '=': state = 7; tokentype = 'op'
+            elif char == '<': state = 8; tokentype = 'op'
+            elif char == '>': state = 10; tokentype = 'op'
+            elif char == '!': state = 12; tokentype = 'op'
+            elif char == ':': state = 14; tokentype = 'op'
+            elif char == '(': state = 16; tokentype = 'op'
+            elif char == ')': state = 17; tokentype = 'op'
+            elif char == '\'': state = 18; tokentype = 'string'
+            elif char == '"': state = 20; tokentype = 'string'
+            elif char in letters: state = 22; tokentype = 'id'
+            elif char in digits: state = 23; tokentype = 'int'
+            elif char == '.': state = 25; tokentype = 'real'
+            else: fail(line, column, char)
+        elif state == 23:
+            if char == 'i': state = 24
+            elif char == '.': state = 26; tokentype = 'real'
+            elif char in digits: state = 23
+            else: counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+        elif state == 24:
+            counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+        elif state == 25:
+            if char in digits: state = 26
+            else: fail(line, column, char)
+        elif state == 26:
+            if char == 'f': state = 33
+            elif char == 'd': state = 30
+            elif char =='e': state = 27
+            elif char in digits: state = 26
+            else: counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+        elif state == 27:
+            if char in ['+', '-']: state = 28
+            elif char in digits: state = 29
+            else: fail(line, column, char)
+        elif state == 28:
+            if char in digits: state = 29
+            else: fail(line, column, char)
+        elif state == 29:
+            if char == 'f': state = 33
+            elif char == 'd': state = 30
+            else: counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+        elif state == 30:
+            if char == 'f': state = 32
+            elif char == 'd': state = 31
+            else: counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+        elif state == 31:
+            counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+        elif state == 32:
+            counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+        elif state == 33:
+            if char == 'f': state = 34
+            else: counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+        elif state == 34:
+            counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+
+        counter += 1
+
+    return tokens
 
 if __name__ == '__main__':
     main()
