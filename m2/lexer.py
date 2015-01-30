@@ -243,6 +243,10 @@ def tokenize(infile, keywords, states):
 
         state = nextstate
 
+    for token in tokens:
+        if token.v in keywords:
+            token.t = 'keyword'
+
     return tokens
 
 if __name__ == '__main__':
