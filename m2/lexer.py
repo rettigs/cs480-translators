@@ -131,6 +131,7 @@ def tokenize(infile, keywords, letters, digits):
     counter = 0
     lexeme = ""
     tokentype = None
+    accept = None
     state = 0
     line = 1
     column = 1
@@ -170,42 +171,44 @@ def tokenize(infile, keywords, letters, digits):
             if char == 'i': state = 24
             elif char == '.': state = 26; tokentype = 'real'
             elif char in digits: state = 23
-            else: counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+            else: accept = True;
         elif state == 24:
-            counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+            accept = True;
         elif state == 25:
             if char in digits: state = 26
-            else: fail(line, column, char)
+            else: accept = False
         elif state == 26:
             if char == 'f': state = 33
             elif char == 'd': state = 30
             elif char =='e': state = 27
             elif char in digits: state = 26
-            else: counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+            else: accept = True;
         elif state == 27:
             if char in ['+', '-']: state = 28
             elif char in digits: state = 29
-            else: fail(line, column, char)
+            else: accept = False
         elif state == 28:
             if char in digits: state = 29
-            else: fail(line, column, char)
+            else: accept = False
         elif state == 29:
             if char == 'f': state = 33
             elif char == 'd': state = 30
-            else: counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+            else: accept = True;
         elif state == 30:
             if char == 'f': state = 32
             elif char == 'd': state = 31
-            else: counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+            else: accept = True;
         elif state == 31:
-            counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+            accept = True;
         elif state == 32:
-            counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+            accept = True;
         elif state == 33:
             if char == 'f': state = 34
-            else: counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+            else: accept = True;
         elif state == 34:
-            counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
+            accept = True;
+
+        counter -= 1; tokens.append(Token(tokentype, lexeme[:-1])); lexeme = ""; state = 0;
 
         counter += 1
 
