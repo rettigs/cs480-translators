@@ -1,0 +1,6 @@
+"this test is designed to fail"
+"must have '=' after a ':':"
+
+:=
+
+:totallynotanequalssign

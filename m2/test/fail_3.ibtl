@@ -1,0 +1,8 @@
+"this test is designed to fail"
+"real must have a number on at least one side of the decimal point:"
+
+1.1
+1.
+.1
+.a
+.

@@ -1,0 +1,7 @@
+"this test is designed to fail"
+"real must have a number after the 'e':"
+
+1.1e5
+1.1e hello
+1.1ehello
+1.1e
