@@ -198,12 +198,12 @@ def tokenize(infile, keywords, states):
     lexeme = ""
     state = states[0]
     line = 1
-    column = 1
+    column = 0
     while counter < len(code):
         char = code[counter]
         if char == '\n':
             line += 1
-            column = 1
+            column = 0
         if char in (' ', '\t', '\n') and state != states[18] and state != states[20]: # Don't lex whitespace differently in strings
             if state == states[0]:
                 counter += 1; column += 1
@@ -223,7 +223,6 @@ def tokenize(infile, keywords, states):
                     nextstate = states[matchstate]
                     break
             else: # This happens if none of the state's transitions could handle the char
-                print state
                 if state == states[18] or state == states[20]: # If lexing a string, add the char anyway
                     lexeme += char
                     counter += 1; column += 1
