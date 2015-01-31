@@ -7,6 +7,8 @@ Sean Rettig
 CS 480 - Milestone 2
 
 Lexes the Itty Bitty Teaching Language (IBTL).
+Run "./lexer.py -i INFILE" or "./lexer.py < INFILE" to use.
+Run "./lexer.py -h" for additional usage information.
 """
 
 from __future__ import division
