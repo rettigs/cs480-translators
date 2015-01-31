@@ -1,33 +1,15 @@
-#--------------------------------------------
-# INSTRUCTION
-# Quoted strings are to be filled in by student
-#
-CCC = "compiler name"
-CCFLAGS = "compiler flags"
-OBJS = "list of obj files"
-SOURCE = "list of source files"
-RUNFLAGS = "info for runtime flags"
-
-$(OBJS): $(SOURCE)
-	$(CCC) $(CCFLAGS) -c $(SOURCE)
-
-compiler: $(OBJS)
-	$(CCC) $(CCFLAGS) -o compiler $(OBJS)
+compiler:
+	echo "No compile step is required because Python is being used."
+	echo "Copying program into the file called "compiler" anyway."
+	cp lexer.py compiler
 
 clean:
-	rm -f ".o files" core ".exe/class files" "outputs"
+	rm -f compiler stutest.out proftest.out
 	ls
 
 stutest.out: compiler
-	cat stutest1.in
-	-compiler $(RUNFLAGS) stutest1.in > stutest1.out
-	cat stutest1.out
-# Notice the next line. The `-' says to ignore the return code. This
-# is a way to have multiple tests of errors that cause non-zero return
-# codes.
-	cat stutest2.in
-	-compiler stutest2.in > stutest2.out
-	cat stutest2.out
+	bash runtests.sh > stutest.out
+	cat stutest.out
 
 proftest.out: compiler
 	cat $(PROFTEST)
