@@ -94,7 +94,7 @@ def main():
             ('"'): 20,
             letters: 22,
             digits: 23,
-            ('.'): 25
+            ('.'): 26
     }))
     addState(states, State(1, 'op', {}))
     addState(states, State(2, 'op', {}))
@@ -111,25 +111,19 @@ def main():
     addState(states, State(13, 'op', {}))
     addState(states, State(14, None, {('='): 15}))
     addState(states, State(15, 'op', {}))
-    addState(states, State(16, 'op', {}))
-    addState(states, State(17, 'op', {}))
+    addState(states, State(16, 'lparen', {}))
+    addState(states, State(17, 'rparen', {}))
     addState(states, State(18, None, {(''): 18, ('\''): 19}))
     addState(states, State(19, 'string', {}))
     addState(states, State(20, None, {(''): 20, ('"'): 21}))
     addState(states, State(21, 'string', {}))
     addState(states, State(22, 'id', {letters+digits+("_",): 22}))
-    addState(states, State(23, 'int', {digits: 23, ('i'): 24, ('.'): 26}))
-    addState(states, State(24, 'int', {}))
-    addState(states, State(25, None, {digits: 26}))
-    addState(states, State(26, 'real', {digits: 26, ('f'): 33, ('d'): 30, ('e'): 27}))
-    addState(states, State(27, None, {digits: 29, ('+', '-'): 28}))
-    addState(states, State(28, None, {digits: 29}))
-    addState(states, State(29, 'real', {('f'): 33, ('d'): 30}))
-    addState(states, State(30, 'real', {('f'): 32, ('d'): 31}))
-    addState(states, State(31, 'real', {}))
-    addState(states, State(32, 'real', {}))
-    addState(states, State(33, 'real', {('f'): 34}))
-    addState(states, State(34, 'real', {}))
+    addState(states, State(23, 'int', {digits: 23, ('e'): 24, ('.'): 27}))
+    addState(states, State(24, None, {digits: 28, ('+', '-'): 25}))
+    addState(states, State(25, None, {digits: 28}))
+    addState(states, State(26, None, {digits: 27}))
+    addState(states, State(27, 'real', {digits: 27, ('e'): 24}))
+    addState(states, State(28, 'real', {digits: 28}))
 
     # Defaults
     infile = sys.stdin
