@@ -41,6 +41,11 @@ class Parser(object):
 
     def main(self):
 
+        # Grammar Productions
+        self.prods = {}
+        self.prods['E'] = [['T'], ['T', 'PLUS', 'E']]
+        self.prods['T'] = [['INT'], ['INT', 'TIMES', 'T'], ['OPEN', 'E', 'CLOSE']]
+
         # Defaults
         self.infile = sys.stdin
         self.outfile = sys.stdout
@@ -78,9 +83,9 @@ class Parser(object):
 
         # Create parse tree
         self.tree = Tree()
-        self.tree.root.value = 'E'
         self.treepointer = self.tree.root
-        self.E()
+        self.treepointer.value = 'E'
+        self.A('E')
         self.tree.printTree()
 
         # Clean up input file
@@ -117,42 +122,30 @@ class Parser(object):
         self.nexttoken += 1
         return result
 
-    def E1(self):
-        return self.T()
-    def E2(self):
-        return self.T() and self.term('PLUS') and self.E()
-    def E(self):
+    def Anum(self, string):
+        '''"string" is a list of terminals/nonterminals'''
+        checks = []
+        for x in string:
+            if x in self.prods: # If it's a nonterminal
+                checks.append("self.A('{}')".format(x))
+            else: # If it's a terminal
+                checks.append("self.term('{}')".format(x))
+        match = " and ".join(checks)
+        print match
+        return eval(match)
+
+    def A(self, word):
         save = self.nexttoken
-        prods = [self.E1, self.E2]
-        for prod in prods:
+        productions = self.prods[word]
+        for production in productions:
             self.nexttoken = save
-            if prod():
+            if self.Anum(production):
                 result = True
                 break
         else:
             result = False
         if result:
             self.treepointer.children = [TreeNode('E', self.treepointer)]
-        return result
-
-    def T1(self):
-        return self.term('INT')
-    def T2(self):
-        return self.term('INT') and self.term('TIMES') and self.T()
-    def T3(self):
-        return self.term('OPEN') and self.E() and self.term('CLOSE')
-    def T(self):
-        save = self.nexttoken
-        prods = [self.T1, self.T2, self.T3]
-        for prod in prods:
-            self.nexttoken = save
-            if prod():
-                result = True
-                break
-        else:
-            result = False
-        if result:
-            self.treepointer.children = [TreeNode('T', self.treepointer)]
         return result
 
 if __name__ == '__main__':
