@@ -39,13 +39,12 @@ class Parser(object):
         self.verbose = 0
         self.tokens = []
         self.nexttoken = 0
-        self.offset = 0
 
     def main(self):
 
         # Grammar Productions
         self.prods = {}
-        self.prods['S'] = [['OPEN', 'CLOSE'], ['OPEN', 'S', 'CLOSE'], ['S', 'S'], ['EXPR']]
+        self.prods['S'] = [['EXPR'], ['OPEN', 'CLOSE'], ['OPEN', 'S', 'CLOSE'], ['S', 'S']]
         self.prods['EXPR'] = [['OPER'], ['STMTS']]
         self.prods['OPER'] = [['OPEN', 'ASSIGN', 'NAME', 'OPER', 'CLOSE'], ['OPEN', 'BINOPS', 'OPER', 'OPER', 'CLOSE'], ['OPEN', 'UNOPS', 'OPER'], ['CONSTANTS'], ['NAME']]
         self.prods['BINOPS'] = [['PLUS'], ['MINUS'], ['TIMES'], ['DIVIDE'], ['MOD'], ['POWER'], ['EQ'], ['GT'], ['GE'], ['LT'], ['LE'], ['NE'], ['OR'], ['AND']]
@@ -101,9 +100,9 @@ class Parser(object):
 
         # Create parse tree
         self.tree = Tree()
-        self.tree.root.value = 'E'
-        #print self.A('E', self.tree.root, 0)
-        print self.parse('E', 0)
+        self.tree.root.value = 'S'
+        #print self.A('S', self.tree.root, 0)
+        print self.parse('S', 0)
         #self.tree.printTree()
 
         # Clean up input file
@@ -131,86 +130,35 @@ class Parser(object):
         print '\t-d\tenable debug messages; use -dd for more even more messages'
         sys.exit(2)
 
-    def parse(self, curword, depth, offset=0):
+    def parse(self, curword, depth):
         depth += 1
         indent = "  " * depth
+        print indent + "Current word: '{}'".format(curword)
         save = self.nexttoken
-        print indent + "Parser: current word: '{}'".format(curword)
-        for prod in self.prods[curword][offset:]:
+        for prod in self.prods[curword]:
+            print indent + "Trying production '{}'".format(prod)
+            depth += 1
+            indent = "  " * depth
             self.nexttoken = save
-            print indent + "Parser: trying production '{}'".format(prod)
-            matched = self.matcher(prod, depth)
-            if matched:
-                if depth == 1 and self.nexttoken + 2 >= len(self.tokens):
-                    return False
-                else:
-                    return True
-        return False
-
-    def matcher(self, prod, depth):
-        depth += 1
-        indent = "  " * depth
-        for word in prod:
-            if self.nexttoken >= len(self.tokens):
-                return False
-            for i in xrange(5):
+            for word in prod:
                 if word in self.prods: # If it's a nonterminal
-                    print indent + "Matcher: trying to match nonterminal '{}'".format(word)
-                    result = self.parse(word, depth, offset=i)
-                else:
-                    print indent + "Matcher: trying to match terminal '{}' with next token '{}'".format(word, repr(self.tokens[self.nexttoken]))
+                    print indent + "Trying to match nonterminal '{}'".format(word)
+                    result = self.parse(word, depth)
+                else: # If it's a terminal
+                    print indent + "Trying to match nonterminal '{}' to next token '{}'".format(word, repr(self.tokens[self.nexttoken]))
                     result = self.tokens[self.nexttoken].t == word
-                    self.nexttoken += 1
-                if result:
-                    print indent + "Matcher: success matching nonterminal '{}'".format(word)
-                    break
-                else:
-                    print indent + "Matcher: failure matching nonterminal '{}'".format(word)
+                    if result:
+                        print indent + "Success matching '{}'".format(word)
+                        self.nexttoken += 1
+                    else:
+                        print indent + "Failure matching '{}'".format(word)
+                if result is False:
+                    break # Move on to the next production if this one didn't match
             else:
-                return False
-
-        return True
-
-    def term(self, kind, node):
-        result = self.tokens[self.nexttoken].t == kind
-        self.nexttoken += 1
-        #print "TERM: next token is '{}'; does it match kind '{}'? {}".format(repr(self.tokens[tokenpointer]), kind, result)
-        return result
-
-    def Anum(self, node, depth):
-        indent = "    " * depth
-        for child in node.children: # Check to make sure each terminal/nonterminal can be matched
-            print indent + "Trying to match a '{}'...".format(child.value)
-            if child.value in self.prods: # If it's a nonterminal
-                result = self.A(child.value, child, depth)
-            else: # If it's a terminal
-                print "{}".format(repr(self.tokens[self.nexttoken]))
-                result = self.term(child.value, child)
-            if result:
-                print indent + "Matched a '{}'.".format(child.value)
-            else:
-                print indent + "Failed to match a '{}'.".format(child.value)
-                return False
-
-        return True
-
-    def A(self, word, node, depth):
-        depth += 1
-        indent = "    " * depth
-        node.value = word
-        save = self.nexttoken
-        for prod in self.prods[word]:
-            print indent + "At node '{}', trying production '{}'.".format(word, prod)
-            node.children = [TreeNode(prodword, node) for prodword in prod] # Create a child for each word in the production
-            self.nexttoken = save
-            match = self.Anum(node, depth) # Whether all words matched
-            if match:
-                result = True
-                break
-        else:
-            result = False
-
-        return result
+                return True # Return true if all words in the production matched
+            depth -= 1
+            indent = "  " * depth
+        return False # Return false if none of the productions worked
 
 if __name__ == '__main__':
     parser = Parser()
