@@ -45,8 +45,24 @@ class Parser(object):
 
         # Grammar Productions
         self.prods = {}
-        self.prods['E'] = [['T'], ['T', 'PLUS', 'E']]
-        self.prods['T'] = [['INT'], ['INT', 'TIMES', 'T'], ['OPEN', 'E', 'CLOSE']]
+        self.prods['S'] = [['OPEN', 'CLOSE'], ['OPEN', 'S', 'CLOSE'], ['S', 'S'], ['EXPR']]
+        self.prods['EXPR'] = [['OPER'], ['STMTS']]
+        self.prods['OPER'] = [['OPEN', 'ASSIGN', 'NAME', 'OPER', 'CLOSE'], ['OPEN', 'BINOPS', 'OPER', 'OPER', 'CLOSE'], ['OPEN', 'UNOPS', 'OPER'], ['CONSTANTS'], ['NAME']]
+        self.prods['BINOPS'] = [['PLUS'], ['MINUS'], ['TIMES'], ['DIVIDE'], ['MOD'], ['POWER'], ['EQ'], ['GT'], ['GE'], ['LT'], ['LE'], ['NE'], ['OR'], ['AND']]
+        self.prods['UNOPS'] = [['NEGATE'], ['NOT'], ['SIN'], ['COS'], ['TAN']]
+        self.prods['CONSTANTS'] = [['STRINGS'], ['INTS'], ['REALS']]
+        self.prods['STRINGS'] = [['STRING'], ['TRUE'], ['FALSE']]
+        self.prods['INTS'] = [['INT']]
+        self.prods['REALS'] = [['REAL']]
+        self.prods['NAME'] = [['ID']]
+        self.prods['STMTS'] = [['IFSTMTS'], ['WHILESTMTS'], ['LETSTMTS'], ['PRINTSTMTS']]
+        self.prods['PRINTSTMTS'] = [['OPEN', 'STDOUT', 'OPER', 'CLOSE']]
+        self.prods['IFSTMTS'] = [['OPEN', 'IF', 'EXPR', 'EXPR', 'EXPR', 'CLOSE'], ['OPEN', 'IF', 'EXPR', 'EXPR', 'CLOSE']]
+        self.prods['WHILESTMTS'] = [['OPEN', 'WHILE', 'EXPR', 'EXPRLIST', 'CLOSE']]
+        self.prods['EXPRLIST'] = [['EXPR'], ['EXPR', 'EXPRLIST']]
+        self.prods['LETSTMTS'] = [['OPEN', 'LET', 'OPEN', 'VARLIST', 'CLOSE', 'CLOSE']]
+        self.prods['VARLIST'] = [['OPEN', 'NAME', 'TYPE', 'CLOSE'], ['OPEN', 'NAME', 'TYPE', 'CLOSE', 'VARLIST']]
+        self.prods['TYPE'] = [['BOOL'], ['INT'], ['REAL'], ['STRING']]
 
         # Defaults
         self.infile = sys.stdin
