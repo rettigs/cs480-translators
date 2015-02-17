@@ -77,7 +77,11 @@ class Parser(object):
         self.tokens.append(Token('NONE'))
 
         # Create parse tree
-        self.g_stmt()
+        self.tree = Tree()
+        self.tree.root.value = 'E'
+        self.treepointer = self.tree.root
+        self.E()
+        self.tree.printTree()
 
         # Clean up input file
         self.infile.close()
@@ -113,22 +117,43 @@ class Parser(object):
         self.nexttoken += 1
         return result
 
-    def g_stmt_1(self):
-        if self.term('OPEN') and self.term('CLOSE'):
-            print "Accepted at '{}'".format(sys._getframe().f_code.co_name)
-            return True
-        else:
-            print "Rejected at '{}'".format(sys._getframe().f_code.co_name)
-            return False
-
-    def g_stmt(self):
+    def E1(self):
+        return self.T()
+    def E2(self):
+        return self.T() and self.term('PLUS') and self.E()
+    def E(self):
         save = self.nexttoken
-        prods = [self.g_stmt_1]
+        prods = [self.E1, self.E2]
         for prod in prods:
             self.nexttoken = save
-            if prod(): return True
+            if prod():
+                result = True
+                break
         else:
-            return False
+            result = False
+        if result:
+            self.treepointer.children = [TreeNode('E', self.treepointer)]
+        return result
+
+    def T1(self):
+        return self.term('INT')
+    def T2(self):
+        return self.term('INT') and self.term('TIMES') and self.T()
+    def T3(self):
+        return self.term('OPEN') and self.E() and self.term('CLOSE')
+    def T(self):
+        save = self.nexttoken
+        prods = [self.T1, self.T2, self.T3]
+        for prod in prods:
+            self.nexttoken = save
+            if prod():
+                result = True
+                break
+        else:
+            result = False
+        if result:
+            self.treepointer.children = [TreeNode('T', self.treepointer)]
+        return result
 
 if __name__ == '__main__':
     parser = Parser()
