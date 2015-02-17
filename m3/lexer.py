@@ -18,7 +18,7 @@ import os
 import sys
 
 class Token(object):
-    def __init__(self, t, v):
+    def __init__(self, t, v=None):
         self.t = t # Token type, e.g. id, keyword, op, bool, int, real, string
         self.v = v # Token value
 
@@ -98,34 +98,34 @@ def main():
             digits: 23,
             ('.'): 26
     }))
-    addState(states, State(1, 'op', {}))
-    addState(states, State(2, 'op', {}))
-    addState(states, State(3, 'op', {}))
-    addState(states, State(4, 'op', {}))
-    addState(states, State(5, 'op', {}))
-    addState(states, State(6, 'op', {}))
-    addState(states, State(7, 'op', {}))
-    addState(states, State(8, 'op', {('='): 9}))
-    addState(states, State(9, 'op', {}))
-    addState(states, State(10, 'op', {('='): 11}))
-    addState(states, State(11, 'op', {}))
+    addState(states, State(1, 'PLUS', {}))
+    addState(states, State(2, 'MINUS', {}))
+    addState(states, State(3, 'TIMES', {}))
+    addState(states, State(4, 'DIVIDE', {}))
+    addState(states, State(5, 'MOD', {}))
+    addState(states, State(6, 'POWER', {}))
+    addState(states, State(7, 'EQ', {}))
+    addState(states, State(8, 'LT', {('='): 9}))
+    addState(states, State(9, 'LE', {}))
+    addState(states, State(10, 'GT', {('='): 11}))
+    addState(states, State(11, 'GE', {}))
     addState(states, State(12, None, {('='): 13}))
-    addState(states, State(13, 'op', {}))
+    addState(states, State(13, 'NE', {}))
     addState(states, State(14, None, {('='): 15}))
-    addState(states, State(15, 'op', {}))
-    addState(states, State(16, 'lparen', {}))
-    addState(states, State(17, 'rparen', {}))
+    addState(states, State(15, 'ASSIGN', {}))
+    addState(states, State(16, 'OPEN', {}))
+    addState(states, State(17, 'CLOSE', {}))
     addState(states, State(18, None, {(''): 18, ('\''): 19}))
-    addState(states, State(19, 'string', {}))
+    addState(states, State(19, 'STRING', {}))
     addState(states, State(20, None, {(''): 20, ('"'): 21}))
-    addState(states, State(21, 'string', {}))
-    addState(states, State(22, 'id', {letters+digits+("_",): 22}))
-    addState(states, State(23, 'int', {digits: 23, ('e'): 24, ('.'): 27}))
+    addState(states, State(21, 'STRING', {}))
+    addState(states, State(22, 'ID', {letters+digits+("_",): 22}))
+    addState(states, State(23, 'INT', {digits: 23, ('e'): 24, ('.'): 27}))
     addState(states, State(24, None, {digits: 28, ('+', '-'): 25}))
     addState(states, State(25, None, {digits: 28}))
     addState(states, State(26, None, {digits: 27}))
-    addState(states, State(27, 'real', {digits: 27, ('e'): 24}))
-    addState(states, State(28, 'real', {digits: 28}))
+    addState(states, State(27, 'REAL', {digits: 27, ('e'): 24}))
+    addState(states, State(28, 'REAL', {digits: 28}))
 
     # Defaults
     infile = sys.stdin
