@@ -1,0 +1,15 @@
+a.
+S -> 0 S'
+S' -> + | *
+
+S -> a S"
+S' -> + | *
+S" -> S S' S" | epsilon
+
+b.
+S -> 0 S'
+S' -> 1 | S 1
+
+c.
+S -> S'
+S' -> ( S ) S S' | epsilon
