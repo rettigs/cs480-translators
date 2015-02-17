@@ -17,6 +17,7 @@ import math
 import os
 import re
 import sys
+import time
 
 from tree import *
 
@@ -83,10 +84,8 @@ class Parser(object):
 
         # Create parse tree
         self.tree = Tree()
-        self.treepointer = self.tree.root
-        self.treepointer.value = 'E'
-        self.A('E')
-        self.tree.printTree()
+        self.A('E', self.tree.root, 0)
+        self.tree.printTree(maxdepth=3)
 
         # Clean up input file
         self.infile.close()
@@ -113,39 +112,54 @@ class Parser(object):
         print '\t-d\tenable debug messages; use -dd for more even more messages'
         sys.exit(2)
 
-    #def fail(line, column, lexeme, char):
-    #    print "Lexing error on line {}, column {}: char '{}' can't come after lexeme '{}'.".format(line, column, char, lexeme)
-    #    sys.exit(2)
-
-    def term(self, kind):
+    def term(self, kind, node):
         result = self.tokens[self.nexttoken].t == kind
+        #if result:
+        #    node.children.append(TreeNode(self.tokens[self.nexttoken], node))
         self.nexttoken += 1
         return result
 
-    def Anum(self, string):
-        '''"string" is a list of terminals/nonterminals'''
-        checks = []
-        for x in string:
-            if x in self.prods: # If it's a nonterminal
-                checks.append("self.A('{}')".format(x))
+    def Anum(self, string, node, depth):
+        '''"string" is a list of terminals/nonterminals that come as the result of a single derivation step'''
+        newnodes = []
+        for i in xrange(len(string)):
+            if string[i] in self.prods: # If it's a nonterminal
+                result = self.A(string[i], node.children[i], depth)
             else: # If it's a terminal
-                checks.append("self.term('{}')".format(x))
-        match = " and ".join(checks)
-        print match
-        return eval(match)
+                result = self.term(string[i], node.children[i])
+            if result is False:
+                return False
 
-    def A(self, word):
+        #for newnode in newnodes:
+        #    node.children.append(TreeNode(newnode, node))
+
+        return True
+
+    def A(self, word, node, depth):
+        depth += 1
+        indent = "  " * depth
+        node.value = word
         save = self.nexttoken
         productions = self.prods[word]
+        print indent + "At node '{}', see productions '{}'.".format(word, productions)
         for production in productions:
             self.nexttoken = save
-            if self.Anum(production):
+            for newword in production:
+                node.children.append(TreeNode(newword, node))
+            print indent + "At node '{}', appending children '{}'.".format(word, [c.value for c in node.children])
+            if self.Anum(production, node, depth):
                 result = True
+                print indent + "At node '{}', was success.".format(word)
                 break
+            else:
+                node.children = []
+                print indent + "At node '{}', was failure; new children: {}.".format(word, [c.value for c in node.children])
         else:
             result = False
         if result:
-            self.treepointer.children = [TreeNode('E', self.treepointer)]
+            pass
+            #node.children = [TreeNode('E', self.treepointer)]
+
         return result
 
 if __name__ == '__main__':
