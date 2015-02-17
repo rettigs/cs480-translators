@@ -39,6 +39,7 @@ class Parser(object):
         self.verbose = 0
         self.tokens = []
         self.nexttoken = 0
+        self.offset = 0
 
     def main(self):
 
@@ -84,8 +85,10 @@ class Parser(object):
 
         # Create parse tree
         self.tree = Tree()
-        self.A('E', self.tree.root, 0)
-        self.tree.printTree(maxdepth=3)
+        self.tree.root.value = 'E'
+        #print self.A('E', self.tree.root, 0)
+        print self.parse('E', 0)
+        #self.tree.printTree()
 
         # Clean up input file
         self.infile.close()
@@ -112,6 +115,46 @@ class Parser(object):
         print '\t-d\tenable debug messages; use -dd for more even more messages'
         sys.exit(2)
 
+    def parse(self, curword, depth, offset=0):
+        depth += 1
+        indent = "  " * depth
+        save = self.nexttoken
+        print indent + "Parser: current word: '{}'".format(curword)
+        for prod in self.prods[curword][offset:]:
+            self.nexttoken = save
+            print indent + "Parser: trying production '{}'".format(prod)
+            matched = self.matcher(prod, depth)
+            if matched:
+                if depth == 1 and self.nexttoken + 2 >= len(self.tokens):
+                    return False
+                else:
+                    return True
+        return False
+
+    def matcher(self, prod, depth):
+        depth += 1
+        indent = "  " * depth
+        for word in prod:
+            if self.nexttoken >= len(self.tokens):
+                return False
+            for i in xrange(5):
+                if word in self.prods: # If it's a nonterminal
+                    print indent + "Matcher: trying to match nonterminal '{}'".format(word)
+                    result = self.parse(word, depth, offset=i)
+                else:
+                    print indent + "Matcher: trying to match terminal '{}' with next token '{}'".format(word, repr(self.tokens[self.nexttoken]))
+                    result = self.tokens[self.nexttoken].t == word
+                    self.nexttoken += 1
+                if result:
+                    print indent + "Matcher: success matching nonterminal '{}'".format(word)
+                    break
+                else:
+                    print indent + "Matcher: failure matching nonterminal '{}'".format(word)
+            else:
+                return False
+
+        return True
+
     def term(self, kind, node):
         result = self.tokens[self.nexttoken].t == kind
         self.nexttoken += 1
@@ -119,12 +162,13 @@ class Parser(object):
         return result
 
     def Anum(self, node, depth):
-        indent = "  " * depth
+        indent = "    " * depth
         for child in node.children: # Check to make sure each terminal/nonterminal can be matched
             print indent + "Trying to match a '{}'...".format(child.value)
             if child.value in self.prods: # If it's a nonterminal
                 result = self.A(child.value, child, depth)
             else: # If it's a terminal
+                print "{}".format(repr(self.tokens[self.nexttoken]))
                 result = self.term(child.value, child)
             if result:
                 print indent + "Matched a '{}'.".format(child.value)
@@ -136,7 +180,7 @@ class Parser(object):
 
     def A(self, word, node, depth):
         depth += 1
-        indent = "  " * depth
+        indent = "    " * depth
         node.value = word
         save = self.nexttoken
         for prod in self.prods[word]:
