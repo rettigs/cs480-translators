@@ -18,6 +18,8 @@ import os
 import re
 import sys
 
+from tree import *
+
 class Token(object):
     def __init__(self, t, v=None):
         self.t = t # Token type, e.g. id, keyword, op, bool, int, real, string
