@@ -29,7 +29,6 @@ class Tree(object):
     def printTree(self):
         self.root.printNode(0)
 
-
 tree = Tree()
 pointer = tree.root
 
@@ -42,7 +41,7 @@ pointer = pointer.children[0]
 pointer.children = [Node('oper')]
 pointer = pointer.children[0]
 
-pointer.children = [Node(Token('OPEN', '(')), Node('binops'), Node('oper'), Node('oper'), Node(Token('OPEN', '('))]
+pointer.children = [Node(Token('OPEN', '(')), Node('binops'), Node('oper'), Node('oper'), Node(Token('CLOSE', ')'))]
 
 pointer.children[1].children = [Node(Token('PLUS', '+'))]
 
