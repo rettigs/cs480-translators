@@ -114,24 +114,23 @@ class Parser(object):
 
     def term(self, kind, node):
         result = self.tokens[self.nexttoken].t == kind
-        #if result:
-        #    node.children.append(TreeNode(self.tokens[self.nexttoken], node))
         self.nexttoken += 1
+        #print "TERM: next token is '{}'; does it match kind '{}'? {}".format(repr(self.tokens[tokenpointer]), kind, result)
         return result
 
-    def Anum(self, string, node, depth):
-        '''"string" is a list of terminals/nonterminals that come as the result of a single derivation step'''
-        newnodes = []
-        for i in xrange(len(string)):
-            if string[i] in self.prods: # If it's a nonterminal
-                result = self.A(string[i], node.children[i], depth)
+    def Anum(self, node, depth):
+        indent = "  " * depth
+        for child in node.children: # Check to make sure each terminal/nonterminal can be matched
+            print indent + "Trying to match a '{}'...".format(child.value)
+            if child.value in self.prods: # If it's a nonterminal
+                result = self.A(child.value, child, depth)
             else: # If it's a terminal
-                result = self.term(string[i], node.children[i])
-            if result is False:
+                result = self.term(child.value, child)
+            if result:
+                print indent + "Matched a '{}'.".format(child.value)
+            else:
+                print indent + "Failed to match a '{}'.".format(child.value)
                 return False
-
-        #for newnode in newnodes:
-        #    node.children.append(TreeNode(newnode, node))
 
         return True
 
@@ -140,25 +139,16 @@ class Parser(object):
         indent = "  " * depth
         node.value = word
         save = self.nexttoken
-        productions = self.prods[word]
-        print indent + "At node '{}', see productions '{}'.".format(word, productions)
-        for production in productions:
+        for prod in self.prods[word]:
+            print indent + "At node '{}', trying production '{}'.".format(word, prod)
+            node.children = [TreeNode(prodword, node) for prodword in prod] # Create a child for each word in the production
             self.nexttoken = save
-            for newword in production:
-                node.children.append(TreeNode(newword, node))
-            print indent + "At node '{}', appending children '{}'.".format(word, [c.value for c in node.children])
-            if self.Anum(production, node, depth):
+            match = self.Anum(node, depth) # Whether all words matched
+            if match:
                 result = True
-                print indent + "At node '{}', was success.".format(word)
                 break
-            else:
-                node.children = []
-                print indent + "At node '{}', was failure; new children: {}.".format(word, [c.value for c in node.children])
         else:
             result = False
-        if result:
-            pass
-            #node.children = [TreeNode('E', self.treepointer)]
 
         return result
 
