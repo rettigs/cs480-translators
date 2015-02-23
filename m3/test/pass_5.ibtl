@@ -3,6 +3,5 @@
 (if true (stdout "if was true") (stdout "if was false"))
 (if false (stdout "if was true") (stdout "if was false"))
 
-(while false ((1)(2)(3)))
-(whileyouwereout false ((1)(2)(3)))
-
+(while false 1 2 3)
+(whileyouwereout false 1 2 3)

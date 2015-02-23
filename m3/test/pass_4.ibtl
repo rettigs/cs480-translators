@@ -3,5 +3,3 @@
 
 
 (stdout "also lots of newlines")
-
-(stdoutside "<-- that's an identifier, not a keyword (because of greedy matching)"
