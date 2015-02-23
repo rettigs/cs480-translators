@@ -4,7 +4,13 @@ class Token(object):
         self.v = v # Token value
 
     def __str__(self):
-        return "Token(\"{}\", \"{}\")".format(self.t, self.v.replace('"','\\"'))
+        if isinstance(self.v, str):
+            return "Token(\"{}\", \"{}\")".format(self.t, self.v.replace('"','\\"'))
+        else:
+            return "Token(\"{}\", \"{}\")".format(self.t, self.v)
 
     def __repr__(self):
-        return "<{} \"{}\">".format(self.t, self.v.replace('"','\\"'))
+        if isinstance(self.v, str):
+            return "<{} \"{}\">".format(self.t, self.v.replace('"','\\"'))
+        else:
+            return "<{} \"{}\">".format(self.t, self.v)

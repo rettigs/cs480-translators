@@ -75,17 +75,15 @@ class Parser(object):
             sys.exit(2)
         for o, a in opts:
             if o == "-d":
-                global debug
-                debug += 1
+                self.debug += 1
             elif o == "-v":
-                global verbose
-                verbose += 1
+                self.verbose += 1
             elif o == "-i":
                 self.infilename = a
             elif o == "-o":
                 self.outfilename = a
             else:
-                usage()
+                self.usage()
 
         # Open input file
         if self.infilename is not None:
@@ -118,37 +116,45 @@ class Parser(object):
         if self.outfilename is not None:
             os.rename(self.outfilename+".tmp", self.outfilename)
 
-    def usage():
+    def usage(self):
         print 'Usage: {0} [-h] [-i infile] [-o outfile] [-a alg(s)] [-p] [-l] [-v]... [-d]...'.format(sys.argv[0])
         print '\t-h\tview this help'
-        print '\t-i\tspecify an input file of IBTL code, defaults to stdin'
-        print '\t-o\tspecify an output file of tokens, defaults to stdout'
+        print '\t-i\tspecify an input file of a list of IBTL tokens, defaults to stdin'
+        print '\t-o\tspecify an output file of parse tree, defaults to stdout'
         print '\t-v\tenable more verbose messages; use -vv for more even more messages'
         print '\t-d\tenable debug messages; use -dd for more even more messages'
         sys.exit(2)
 
+    def dprint(self, message, level=1):
+        if self.debug >= level:
+            print message
+
+    def vprint(self, message, level=1):
+        if self.verbose >= level:
+            print message
+
     def parse(self, curword, depth):
         depth += 1
         indent = "  " * depth
-        print indent + "Current word: '{}'".format(curword)
+        self.vprint(indent + "Current word: '{}'".format(curword), 2)
         save = self.nexttoken
         for prod in self.prods[curword]:
-            print indent + "Trying production '{}'".format(prod)
+            self.vprint(indent + "Trying production '{}'".format(prod), 2)
             depth += 1
             indent = "  " * depth
             self.nexttoken = save
             for word in prod:
                 if word in self.prods: # If it's a nonterminal
-                    print indent + "Trying to match nonterminal '{}'".format(word)
+                    self.vprint(indent + "Trying to match nonterminal '{}'".format(word), 2)
                     result = self.parse(word, depth)
                 else: # If it's a terminal
-                    print indent + "Trying to match nonterminal '{}' to next token '{}'".format(word, repr(self.tokens[self.nexttoken]))
+                    self.vprint(indent + "Trying to match nonterminal '{}' to next token '{}'".format(word, repr(self.tokens[self.nexttoken])), 2)
                     result = self.tokens[self.nexttoken].t == word
                     if result:
-                        print indent + "Success matching '{}'".format(word)
+                        self.vprint(indent + "Success matching '{}'".format(word), 2)
                         self.nexttoken += 1
                     else:
-                        print indent + "Failure matching '{}'".format(word)
+                        self.vprint(indent + "Failure matching '{}'".format(word), 2)
                 if result is False:
                     break # Move on to the next production if this one didn't match
             else:
