@@ -34,13 +34,13 @@ class Parser(object):
 
         # Grammar Productions
         self.prods = {}
-        self.prods['S'] = [['EXPR', 'SP'], ['OPEN', 'SPP']]
+        self.prods['S'] = [['OPEN', 'SPP'], ['EXPR', 'SP']]
         self.prods['SP'] = [['S', 'SP'], []]
         #self.prods['SPP'] = [['CLOSE', 'SP'], ['S', 'CLOSE', 'SP'], []]
         self.prods['SPP'] = [['CLOSE', 'SP'], ['S', 'CLOSE', 'SP']]
         self.prods['EXPR'] = [['OPER'], ['STMTS']]
         self.prods['OPER'] = [['OPEN', 'OPERP'], ['CONSTANTS'], ['NAME']]
-        self.prods['OPERP'] = [['ASSIGN', 'NAME', 'OPER', 'CLOSE'], ['BINOPS', 'OPER', 'OPER', 'CLOSE'], ['UNOPS', 'OPER']]
+        self.prods['OPERP'] = [['ASSIGN', 'NAME', 'OPER', 'CLOSE'], ['BINOPS', 'OPER', 'OPER', 'CLOSE'], ['UNOPS', 'OPER', 'CLOSE']]
         self.prods['BINOPS'] = [['PLUS'], ['MINUS'], ['TIMES'], ['DIVIDE'], ['MOD'], ['POWER'], ['EQ'], ['GT'], ['GE'], ['LT'], ['LE'], ['NE'], ['OR'], ['AND']]
         self.prods['UNOPS'] = [['NEGATE'], ['NOT'], ['SIN'], ['COS'], ['TAN']]
         self.prods['CONSTANTS'] = [['STRINGS'], ['INTS'], ['REALS']]
@@ -92,12 +92,13 @@ class Parser(object):
         # Get tokens
         self.tokens = eval(self.infile.read())
         self.tokens.append(Token('NONE'))
+        self.dprint(self.tokens)
 
         # Create parse tree
         self.tree = Tree()
         self.tree.root.value = 'S'
         #print self.A('S', self.tree.root, 0)
-        print self.parse('S', 0)
+        result = self.parse('S', 0)
         #self.tree.printTree()
 
         # Clean up input file
@@ -109,7 +110,7 @@ class Parser(object):
 
         # Write output
         #self.outfile.write("[" + ", ".join([str(token) for token in self.tokens]) + "]\n")
-        self.outfile.write("[" + ", ".join([str(token) for token in self.tokens]) + "]\n")
+        self.outfile.write("Valid syntax: {}\n".format(result))
 
         # Clean up output file
         self.outfile.close()
@@ -127,7 +128,7 @@ class Parser(object):
 
     def dprint(self, message, level=1):
         if self.debug >= level:
-            print message
+            print "DEBUG {}: {}".format(level, message)
 
     def vprint(self, message, level=1):
         if self.verbose >= level:
@@ -136,32 +137,40 @@ class Parser(object):
     def parse(self, curword, depth):
         depth += 1
         indent = "  " * depth
-        self.vprint(indent + "Current word: '{}'".format(curword), 2)
+        self.vprint(indent + "Parser: Current word: '{}'".format(curword), 2)
         save = self.nexttoken
         for prod in self.prods[curword]:
-            self.vprint(indent + "Trying production '{}'".format(prod), 2)
-            depth += 1
-            indent = "  " * depth
+            self.vprint(indent + "Parser: Trying production '{}'".format(prod), 2)
             self.nexttoken = save
-            for word in prod:
-                if word in self.prods: # If it's a nonterminal
-                    self.vprint(indent + "Trying to match nonterminal '{}'".format(word), 2)
-                    result = self.parse(word, depth)
-                else: # If it's a terminal
-                    self.vprint(indent + "Trying to match nonterminal '{}' to next token '{}'".format(word, repr(self.tokens[self.nexttoken])), 2)
-                    result = self.tokens[self.nexttoken].t == word
-                    if result:
-                        self.vprint(indent + "Success matching '{}'".format(word), 2)
-                        self.nexttoken += 1
-                    else:
-                        self.vprint(indent + "Failure matching '{}'".format(word), 2)
-                if result is False:
-                    break # Move on to the next production if this one didn't match
-            else:
-                return True # Return true if all words in the production matched
-            depth -= 1
-            indent = "  " * depth
+            if self.matcher(prod, depth):
+                self.dprint("depth: {}".format(depth))
+                self.dprint("nexttoken: {}".format(self.nexttoken))
+                self.dprint("len(tokens): {}".format(len(self.tokens)))
+                if depth == 1 and self.nexttoken + 1 < len(self.tokens):
+                    return False # Special case: don't accept if it's the last production and we haven't read all the tokens yet
+                else:
+                    return True
         return False # Return false if none of the productions worked
+
+    def matcher(self, prod, depth):
+        depth += 1
+        indent = "  " * depth
+        for word in prod:
+            if word in self.prods: # If it's a nonterminal
+                self.vprint(indent + "Matcher: Trying to match nonterminal '{}'".format(word), 2)
+                result = self.parse(word, depth)
+            else: # If it's a terminal
+                self.vprint(indent + "Matcher: Trying to match nonterminal '{}' to next token '{}'".format(word, repr(self.tokens[self.nexttoken])), 2)
+                result = self.tokens[self.nexttoken].t == word
+                if result:
+                    self.vprint(indent + "Matcher: Success matching '{}'".format(word), 2)
+                    self.nexttoken += 1
+                else:
+                    self.vprint(indent + "Matcher: Failure matching '{}'".format(word), 2)
+            if result is False:
+                break # Move on to the next production if this one didn't match
+        else:
+            return True # Return true if all words in the production matched
 
 if __name__ == '__main__':
     parser = Parser()
