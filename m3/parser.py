@@ -44,6 +44,15 @@ class Parser(object):
 
         # Grammar Productions
         self.prods = {}
+        '''
+        self.prods['E'] = [['T'], ['T', 'PLUS', 'E']]
+        self.prods['T'] = [['INT'], ['INT', 'TIMES', 'T'], ['OPEN', 'E', 'CLOSE']]
+        '''
+        self.prods['E'] = [['T', 'EP']]
+        self.prods['EP'] = [['PLUS', 'E'], []]
+        self.prods['T'] = [['INT', 'TP'], ['OPEN', 'E', 'CLOSE']]
+        self.prods['TP'] = [['TIMES', 'T'], []]
+        '''
         self.prods['S'] = [['EXPR'], ['OPEN', 'CLOSE'], ['OPEN', 'S', 'CLOSE'], ['S', 'S']]
         self.prods['EXPR'] = [['OPER'], ['STMTS']]
         self.prods['OPER'] = [['OPEN', 'ASSIGN', 'NAME', 'OPER', 'CLOSE'], ['OPEN', 'BINOPS', 'OPER', 'OPER', 'CLOSE'], ['OPEN', 'UNOPS', 'OPER'], ['CONSTANTS'], ['NAME']]
@@ -62,6 +71,7 @@ class Parser(object):
         self.prods['LETSTMTS'] = [['OPEN', 'LET', 'OPEN', 'VARLIST', 'CLOSE', 'CLOSE']]
         self.prods['VARLIST'] = [['OPEN', 'NAME', 'TYPE', 'CLOSE'], ['OPEN', 'NAME', 'TYPE', 'CLOSE', 'VARLIST']]
         self.prods['TYPE'] = [['BOOL'], ['INT'], ['REAL'], ['STRING']]
+        '''
 
         # Defaults
         self.infile = sys.stdin
@@ -100,9 +110,9 @@ class Parser(object):
 
         # Create parse tree
         self.tree = Tree()
-        self.tree.root.value = 'S'
+        self.tree.root.value = 'E'
         #print self.A('S', self.tree.root, 0)
-        print self.parse('S', 0)
+        print self.parse('E', 0)
         #self.tree.printTree()
 
         # Clean up input file
