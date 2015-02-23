@@ -231,7 +231,8 @@ def tokenize(infile, keywords, states):
 
     for token in tokens:
         if token.v in keywords:
-            token.t = 'keyword'
+            token.t = token.v.upper()
+            token.v = None
 
     return tokens
 
