@@ -92,7 +92,7 @@ class Parser(object):
         # Get tokens
         self.tokens = eval(self.infile.read())
         self.tokens.append(Token('NONE'))
-        self.dprint(self.tokens)
+        self.vprint(self.tokens)
 
         # Create parse tree
         self.tree = Tree()
