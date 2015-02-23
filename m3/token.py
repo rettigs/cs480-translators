@@ -5,12 +5,12 @@ class Token(object):
 
     def __str__(self):
         if isinstance(self.v, str):
-            return "Token(\"{}\", \"{}\")".format(self.t, self.v.replace('"','\\"'))
+            return "Token(\"{}\", \"{}\")".format(self.t, self.v.replace('"','\\"').replace('\n', '\\n'))
         else:
             return "Token(\"{}\", \"{}\")".format(self.t, self.v)
 
     def __repr__(self):
         if isinstance(self.v, str):
-            return "<{} \"{}\">".format(self.t, self.v.replace('"','\\"'))
+            return "<{} \"{}\">".format(self.t, self.v.replace('"','\\"').replace('\n', '\\n'))
         else:
             return "<{} \"{}\">".format(self.t, self.v)
