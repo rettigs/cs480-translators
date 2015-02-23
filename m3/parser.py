@@ -44,18 +44,13 @@ class Parser(object):
 
         # Grammar Productions
         self.prods = {}
-        '''
-        self.prods['E'] = [['T'], ['T', 'PLUS', 'E']]
-        self.prods['T'] = [['INT'], ['INT', 'TIMES', 'T'], ['OPEN', 'E', 'CLOSE']]
-        '''
-        self.prods['E'] = [['T', 'EP']]
-        self.prods['EP'] = [['PLUS', 'E'], []]
-        self.prods['T'] = [['INT', 'TP'], ['OPEN', 'E', 'CLOSE']]
-        self.prods['TP'] = [['TIMES', 'T'], []]
-        '''
-        self.prods['S'] = [['EXPR'], ['OPEN', 'CLOSE'], ['OPEN', 'S', 'CLOSE'], ['S', 'S']]
+        self.prods['S'] = [['EXPR', 'SP'], ['OPEN', 'SPP']]
+        self.prods['SP'] = [['S', 'SP'], []]
+        #self.prods['SPP'] = [['CLOSE', 'SP'], ['S', 'CLOSE', 'SP'], []]
+        self.prods['SPP'] = [['CLOSE', 'SP'], ['S', 'CLOSE', 'SP']]
         self.prods['EXPR'] = [['OPER'], ['STMTS']]
-        self.prods['OPER'] = [['OPEN', 'ASSIGN', 'NAME', 'OPER', 'CLOSE'], ['OPEN', 'BINOPS', 'OPER', 'OPER', 'CLOSE'], ['OPEN', 'UNOPS', 'OPER'], ['CONSTANTS'], ['NAME']]
+        self.prods['OPER'] = [['OPEN', 'OPERP'], ['CONSTANTS'], ['NAME']]
+        self.prods['OPERP'] = [['ASSIGN', 'NAME', 'OPER', 'CLOSE'], ['BINOPS', 'OPER', 'OPER', 'CLOSE'], ['UNOPS', 'OPER']]
         self.prods['BINOPS'] = [['PLUS'], ['MINUS'], ['TIMES'], ['DIVIDE'], ['MOD'], ['POWER'], ['EQ'], ['GT'], ['GE'], ['LT'], ['LE'], ['NE'], ['OR'], ['AND']]
         self.prods['UNOPS'] = [['NEGATE'], ['NOT'], ['SIN'], ['COS'], ['TAN']]
         self.prods['CONSTANTS'] = [['STRINGS'], ['INTS'], ['REALS']]
@@ -65,13 +60,15 @@ class Parser(object):
         self.prods['NAME'] = [['ID']]
         self.prods['STMTS'] = [['IFSTMTS'], ['WHILESTMTS'], ['LETSTMTS'], ['PRINTSTMTS']]
         self.prods['PRINTSTMTS'] = [['OPEN', 'STDOUT', 'OPER', 'CLOSE']]
-        self.prods['IFSTMTS'] = [['OPEN', 'IF', 'EXPR', 'EXPR', 'EXPR', 'CLOSE'], ['OPEN', 'IF', 'EXPR', 'EXPR', 'CLOSE']]
+        self.prods['IFSTMTS'] = [['OPEN', 'IF', 'EXPR', 'EXPR', 'IFSTMTSP']]
+        self.prods['IFSTMTSP'] = [['EXPR', 'CLOSE'], ['CLOSE']]
         self.prods['WHILESTMTS'] = [['OPEN', 'WHILE', 'EXPR', 'EXPRLIST', 'CLOSE']]
-        self.prods['EXPRLIST'] = [['EXPR'], ['EXPR', 'EXPRLIST']]
+        self.prods['EXPRLIST'] = [['EXPR', 'EXPRLISTP']]
+        self.prods['EXPRLISTP'] = [['EXPRLIST'], []]
         self.prods['LETSTMTS'] = [['OPEN', 'LET', 'OPEN', 'VARLIST', 'CLOSE', 'CLOSE']]
-        self.prods['VARLIST'] = [['OPEN', 'NAME', 'TYPE', 'CLOSE'], ['OPEN', 'NAME', 'TYPE', 'CLOSE', 'VARLIST']]
+        self.prods['VARLIST'] = [['OPEN', 'NAME', 'TYPE', 'CLOSE', 'VARLISTP']]
+        self.prods['VARLISTP'] = [['VARLIST'], []]
         self.prods['TYPE'] = [['BOOL'], ['INT'], ['REAL'], ['STRING']]
-        '''
 
         # Defaults
         self.infile = sys.stdin
@@ -110,9 +107,9 @@ class Parser(object):
 
         # Create parse tree
         self.tree = Tree()
-        self.tree.root.value = 'E'
+        self.tree.root.value = 'S'
         #print self.A('S', self.tree.root, 0)
-        print self.parse('E', 0)
+        print self.parse('S', 0)
         #self.tree.printTree()
 
         # Clean up input file
