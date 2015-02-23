@@ -4,19 +4,16 @@ class TreeNode(object):
         self.parent = parent
         self.children = children
 
-    def printNode(self, level, depthleft=None):
-        if depthleft is not None:
-            depthleft -= 1
-            if depthleft < 0:
-                return
+    def printNode(self, level):
         indent = "    " * level
-        print indent + str(self.value)
+        level += 1
+        print "{}{}".format(indent, self.value)
         for child in self.children:
-            child.printNode(level+1, depthleft=depthleft)
+            child.printNode(level)
 
 class Tree(object):
     def __init__(self):
         self.root = TreeNode(value='S')
 
-    def printTree(self, maxdepth=None):
-        self.root.printNode(0, depthleft=maxdepth)
+    def printTree(self):
+        self.root.printNode(0)

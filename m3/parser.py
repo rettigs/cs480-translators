@@ -96,10 +96,9 @@ class Parser(object):
 
         # Create parse tree
         self.tree = Tree()
-        self.tree.root.value = 'S'
-        #print self.A('S', self.tree.root, 0)
-        result = self.parse('S', 0)
-        #self.tree.printTree()
+        result = self.parse('S', self.tree.root, 0)
+        if self.verbose >= 1:
+            self.tree.printTree()
 
         # Clean up input file
         self.infile.close()
@@ -118,7 +117,7 @@ class Parser(object):
             os.rename(self.outfilename+".tmp", self.outfilename)
 
     def usage(self):
-        print 'Usage: {0} [-h] [-i infile] [-o outfile] [-a alg(s)] [-p] [-l] [-v]... [-d]...'.format(sys.argv[0])
+        print 'Usage: {0} [-h] [-i infile] [-o outfile] [-v]... [-d]...'.format(sys.argv[0])
         print '\t-h\tview this help'
         print '\t-i\tspecify an input file of a list of IBTL tokens, defaults to stdin'
         print '\t-o\tspecify an output file of parse tree, defaults to stdout'
@@ -134,15 +133,17 @@ class Parser(object):
         if self.verbose >= level:
             print message
 
-    def parse(self, curword, depth):
+    def parse(self, word, node, depth):
         depth += 1
         indent = "  " * depth
-        self.vprint(indent + "Parser: Current word: '{}'".format(curword), 2)
+        node.value = word
+        self.vprint(indent + "Parser: Current word: '{}'".format(word), 2)
         save = self.nexttoken
-        for prod in self.prods[curword]:
+        for prod in self.prods[word]:
             self.vprint(indent + "Parser: Trying production '{}'".format(prod), 2)
+            node.children = [TreeNode(prodword, node) for prodword in prod]
             self.nexttoken = save
-            if self.matcher(prod, depth):
+            if self.matcher(node, depth):
                 self.dprint("depth: {}".format(depth))
                 self.dprint("nexttoken: {}".format(self.nexttoken))
                 self.dprint("len(tokens): {}".format(len(self.tokens)))
@@ -152,18 +153,21 @@ class Parser(object):
                     return True
         return False # Return false if none of the productions worked
 
-    def matcher(self, prod, depth):
+    def matcher(self, node, depth):
         depth += 1
         indent = "  " * depth
-        for word in prod:
+        newChildren = []
+        for child in node.children:
+            word = child.value
             if word in self.prods: # If it's a nonterminal
                 self.vprint(indent + "Matcher: Trying to match nonterminal '{}'".format(word), 2)
-                result = self.parse(word, depth)
+                result = self.parse(word, child, depth)
             else: # If it's a terminal
                 self.vprint(indent + "Matcher: Trying to match nonterminal '{}' to next token '{}'".format(word, repr(self.tokens[self.nexttoken])), 2)
                 result = self.tokens[self.nexttoken].t == word
                 if result:
                     self.vprint(indent + "Matcher: Success matching '{}'".format(word), 2)
+                    child.children = [TreeNode(self.tokens[self.nexttoken].v, child)]
                     self.nexttoken += 1
                 else:
                     self.vprint(indent + "Matcher: Failure matching '{}'".format(word), 2)
