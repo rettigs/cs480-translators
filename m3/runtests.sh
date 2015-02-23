@@ -4,6 +4,6 @@ TESTDIR="test"
 
 for file in `ls $TESTDIR`; do
     echo -e "Test '$file':\n"
-    python translator.py -i "$TESTDIR/$file"
+    cat "$TESTDIR/$file" | ./lexer.py | ./parser.py
     echo -e "\n"
 done
