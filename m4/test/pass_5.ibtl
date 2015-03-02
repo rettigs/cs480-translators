@@ -4,4 +4,3 @@
 (if false (stdout "if was true") (stdout "if was false"))
 
 (while false 1 2 3)
-(whileyouwereout false 1 2 3)
