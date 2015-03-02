@@ -1,0 +1,5 @@
+(+ 1 2)(- 1 2)(stdout "many things on the same line")
+
+
+
+(stdout "also lots of newlines")
