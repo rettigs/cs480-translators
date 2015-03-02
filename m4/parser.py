@@ -97,7 +97,10 @@ class Parser(object):
         # Create parse tree
         self.tree = Tree()
         result = self.parse('S', self.tree.root, 0)
+        parseTree = self.tree.printTreeParse()
         if self.verbose >= 1:
+            print "Valid syntax: {}".format(result)
+        if self.verbose >= 2:
             self.tree.printTree()
 
         # Clean up input file
@@ -109,7 +112,7 @@ class Parser(object):
 
         # Write output
         #self.outfile.write("[" + ", ".join([str(token) for token in self.tokens]) + "]\n")
-        self.outfile.write("Valid syntax: {}\n".format(result))
+        self.outfile.write(parseTree)
 
         # Clean up output file
         self.outfile.close()
@@ -137,10 +140,10 @@ class Parser(object):
         depth += 1
         indent = "  " * depth
         node.value = word
-        self.vprint(indent + "Parser: Current word: '{}'".format(word), 2)
+        self.vprint(indent + "Parser: Current word: '{}'".format(word), 3)
         save = self.nexttoken
         for prod in self.prods[word]:
-            self.vprint(indent + "Parser: Trying production '{}'".format(prod), 2)
+            self.vprint(indent + "Parser: Trying production '{}'".format(prod), 3)
             node.children = [TreeNode(prodword, node) for prodword in prod]
             self.nexttoken = save
             if self.matcher(node, depth):
@@ -160,17 +163,17 @@ class Parser(object):
         for child in node.children:
             word = child.value
             if word in self.prods: # If it's a nonterminal
-                self.vprint(indent + "Matcher: Trying to match nonterminal '{}'".format(word), 2)
+                self.vprint(indent + "Matcher: Trying to match nonterminal '{}'".format(word), 3)
                 result = self.parse(word, child, depth)
             else: # If it's a terminal
-                self.vprint(indent + "Matcher: Trying to match nonterminal '{}' to next token '{}'".format(word, repr(self.tokens[self.nexttoken])), 2)
+                self.vprint(indent + "Matcher: Trying to match nonterminal '{}' to next token '{}'".format(word, repr(self.tokens[self.nexttoken])), 3)
                 result = self.tokens[self.nexttoken].t == word
                 if result:
-                    self.vprint(indent + "Matcher: Success matching '{}'".format(word), 2)
-                    child.children = [TreeNode(self.tokens[self.nexttoken].v, child)]
+                    self.vprint(indent + "Matcher: Success matching '{}'".format(word), 3)
+                    child.children = [TreeNode(self.tokens[self.nexttoken], child)]
                     self.nexttoken += 1
                 else:
-                    self.vprint(indent + "Matcher: Failure matching '{}'".format(word), 2)
+                    self.vprint(indent + "Matcher: Failure matching '{}'".format(word), 3)
             if result is False:
                 break # Move on to the next production if this one didn't match
         else:
