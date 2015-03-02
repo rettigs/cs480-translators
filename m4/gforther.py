@@ -31,6 +31,23 @@ class Gforther(object):
         self.infilename = None
         self.outfilename = None
 
+        self.conversions = {
+                "+": "f+",
+                "-": "f-",
+                "*": "f*",
+                "/": "f/",
+                "%": "fmod",
+                "<": "f<",
+                "<=": "f<=",
+                ">": "f>",
+                ">=": "f>=",
+                "=": "f=",
+                "!=": "f<>",
+                "sin": "fsin",
+                "cos": "fcos",
+                "tan": "ftan",
+        }
+
         # Parse arguments
         try:
             opts, args = getopt.getopt(sys.argv[1:], "dvi:o:h")
@@ -107,11 +124,11 @@ class Gforther(object):
     def convertTokens(self):
         for token in self.tokens:
             try:
-                if token.t == 'NE':
-                    token.v = '<>'
-                elif token.t == 'MOD':
-                    token.v = 'mod'
+                if token.v in self.conversions:
+                    token.v = self.conversions[token.v]
                 self.gforth.append(token.v)
+                if token.t == 'INT':
+                    self.gforth.append('s>f')
             except:
                 pass
 
