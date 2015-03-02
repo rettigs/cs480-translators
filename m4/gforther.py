@@ -21,6 +21,7 @@ class Gforther(object):
     def __init__(self):
         self.debug = 0
         self.verbose = 0
+        self.tokens = []
         self.gforth = []
 
     def main(self):
@@ -63,7 +64,8 @@ class Gforther(object):
         # Clean up input file
         self.infile.close()
 
-        self.gforther(tree.root)
+        self.traverse(tree.root)
+        self.convertTokens()
 
         # Open output file
         if self.outfilename is not None:
@@ -94,13 +96,24 @@ class Gforther(object):
         if self.verbose >= level:
             print message
 
-    def gforther(self, node):
+    def traverse(self, node):
         for child in node.children:
-            self.gforther(child)
+            self.traverse(child)
         try:
-            self.gforth.append(node.value.v)
+            self.tokens.append(node.value)
         except:
             pass
+
+    def convertTokens(self):
+        for token in self.tokens:
+            try:
+                if token.t == 'NE':
+                    token.v = '<>'
+                elif token.t == 'MOD':
+                    token.v = 'mod'
+                self.gforth.append(token.v)
+            except:
+                pass
 
 if __name__ == '__main__':
     gforther = Gforther()
