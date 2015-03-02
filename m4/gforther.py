@@ -32,17 +32,21 @@ class Gforther(object):
         self.outfilename = None
 
         self.conversions = {
+                "%": "mod",
+                "!=": "<>"
+        }
+        self.realConversions = {
                 "+": "f+",
                 "-": "f-",
                 "*": "f*",
                 "/": "f/",
-                "%": "fmod",
+                "mod": "fmod",
                 "<": "f<",
                 "<=": "f<=",
                 ">": "f>",
                 ">=": "f>=",
                 "=": "f=",
-                "!=": "f<>",
+                "<>": "f<>",
                 "sin": "fsin",
                 "cos": "fcos",
                 "tan": "ftan",
@@ -122,20 +126,31 @@ class Gforther(object):
             pass
 
     def convertTokens(self):
-        lastWasString = False
+        prevWasString = False
+        prevWasReal = False
         for token in self.tokens:
             try:
-                if lastWasString and token.v == '+':
+                if prevWasString and token.v == '+':
                     token.v = 'append'
-                lastWasString = False
+                prevWasString = False
+
                 if token.v in self.conversions:
                     token.v = self.conversions[token.v]
+
+                if prevWasReal:
+                    if token.v in self.realConversions:
+                        token.v = self.realConversions[token.v]
+                    if token.t == 'INT':
+                        self.gforth.append('s>f')
+                
+                if token.t == 'REAL':
+                    prevWasReal = True
+
                 if token.t == 'STRING':
-                    lastWasString = True
+                    prevWasString = True
                     token.v = re.sub('^"', 's" ', token.v)
+
                 self.gforth.append(token.v)
-                if token.t == 'INT':
-                    self.gforth.append('s>f')
             except:
                 pass
 
