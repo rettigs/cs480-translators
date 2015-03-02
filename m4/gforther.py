@@ -122,10 +122,17 @@ class Gforther(object):
             pass
 
     def convertTokens(self):
+        lastWasString = False
         for token in self.tokens:
             try:
+                if lastWasString and token.v == '+':
+                    token.v = 'append'
+                lastWasString = False
                 if token.v in self.conversions:
                     token.v = self.conversions[token.v]
+                if token.t == 'STRING':
+                    lastWasString = True
+                    token.v = re.sub('^"', 's" ', token.v)
                 self.gforth.append(token.v)
                 if token.t == 'INT':
                     self.gforth.append('s>f')
