@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-Converts the output of parser.py to a generalized parse tree.
+Converts the output of parsetree.py to gforth.
 """
 
 from __future__ import division
@@ -16,13 +16,12 @@ import time
 from token import *
 from tree import *
 
-class ParseTree(object):
+class Gforther(object):
 
     def __init__(self):
         self.debug = 0
         self.verbose = 0
-        self.tokens = []
-        self.curTokenNumber = 0
+        self.gforth = []
 
     def main(self):
         # Defaults
@@ -54,20 +53,8 @@ class ParseTree(object):
         if self.infilename is not None:
             self.infile = open(self.infilename, 'r')
 
-        # Get tokens
-        self.tokens = []
-        for line in self.infile.readlines():
-            level = len(re.findall('    ', line))
-            token = eval(line)
-            token.level = level
-            self.tokens.append(token)
-            
-        self.vprint(self.tokens, 2)
-
-        # Create parse tree
-        tree = Tree()
-        curNode = tree.root
-        self.makeParseTree(tree.root, 0)
+        # Get parse tree
+        tree = pickle.load(self.infile)
 
         if self.verbose >= 1:
             print ""
@@ -76,12 +63,14 @@ class ParseTree(object):
         # Clean up input file
         self.infile.close()
 
+        self.gforther(tree.root)
+
         # Open output file
         if self.outfilename is not None:
             self.outfile = open(self.outfilename+".tmp", 'w')
 
         # Write output
-        pickle.dump(tree, self.outfile)
+        self.outfile.write(" ".join(self.gforth)+"\n")
 
         # Clean up output file
         self.outfile.close()
@@ -105,30 +94,11 @@ class ParseTree(object):
         if self.verbose >= level:
             print message
 
-    def makeParseTree(self, curNode, depth):
-        depth += 1
-        indent = "  " * depth
-        curToken = self.tokens[self.curTokenNumber]
-        if curToken.t == "OPEN":
-            openLevel = curToken.level
-            self.curTokenNumber += 1
-            curToken = self.tokens[self.curTokenNumber]
-            curNode.value = curToken
-            curNode.children = []
-            while not (curToken.level == openLevel and curToken.t == "CLOSE"):
-                self.curTokenNumber += 1
-                curToken = self.tokens[self.curTokenNumber]
-                self.vprint("{}CurNode: {}    Creating child node under token '{}'".format(indent, curNode.value.v, curToken.t), 3)
-                child = self.makeParseTree(TreeNode(), depth)
-                if child.value.t != "CLOSE":
-                    curNode.children.append(child)
-            self.vprint("{}CurNode: {}    Children: {}".format(indent, curNode.value.v, [c.value for c in curNode.children]), 3)
-        else:
-            curToken = self.tokens[self.curTokenNumber]
-            curNode.value = curToken
-            self.vprint("{}CurNode: {}    Found terminal '{}'; creating node with no children".format(indent, curNode.value.v, curToken.t), 3)
-        return curNode
+    def gforther(self, node):
+        for child in node.children:
+            self.gforther(child)
+        self.gforth.append(node.value.v)
 
 if __name__ == '__main__':
-    parsetree = ParseTree()
-    parsetree.main()
+    gforther = Gforther()
+    gforther.main()
