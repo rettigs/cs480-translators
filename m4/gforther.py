@@ -130,6 +130,8 @@ class Gforther(object):
         prevWasReal = False
         for token in self.tokens:
             try:
+                convert = False
+
                 if prevWasString and token.v == '+':
                     token.v = 'append'
                 prevWasString = False
@@ -141,7 +143,7 @@ class Gforther(object):
                     if token.v in self.realConversions:
                         token.v = self.realConversions[token.v]
                     if token.t == 'INT':
-                        self.gforth.append('s>f')
+                        convert = True
                 
                 if token.t == 'REAL':
                     prevWasReal = True
@@ -151,6 +153,10 @@ class Gforther(object):
                     token.v = re.sub('^"', 's" ', token.v)
 
                 self.gforth.append(token.v)
+
+                if convert:
+                    self.gforth.append('s>f')
+
             except:
                 pass
 
