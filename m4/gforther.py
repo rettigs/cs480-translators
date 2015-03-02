@@ -97,7 +97,10 @@ class Gforther(object):
     def gforther(self, node):
         for child in node.children:
             self.gforther(child)
-        self.gforth.append(node.value.v)
+        try:
+            self.gforth.append(node.value.v)
+        except:
+            pass
 
 if __name__ == '__main__':
     gforther = Gforther()

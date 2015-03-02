@@ -66,8 +66,15 @@ class ParseTree(object):
 
         # Create parse tree
         tree = Tree()
-        curNode = tree.root
-        self.makeParseTree(tree.root, 0)
+        children = []
+        while self.curTokenNumber + 4 < len(self.tokens):
+            newchild = TreeNode()
+            self.makeParseTree(newchild, 0)
+            children.append(newchild)
+            self.curTokenNumber += 1
+
+        tree.root.value = ""
+        tree.root.children = children
 
         if self.verbose >= 1:
             print ""
