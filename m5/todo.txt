@@ -1,0 +1,2 @@
+- fix types such as "int" getting tokenized as ints with no value rather than types with the type as the value
+- modify parser to change tokens like "MINUS" and "PLUS" to be "NEGATE" or "CONCAT" depending on context
