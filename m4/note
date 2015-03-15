@@ -1,0 +1,1 @@
+append doesn't work with string variables, use s+
