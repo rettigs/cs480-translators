@@ -230,7 +230,9 @@ def tokenize(infile, keywords, states):
         state = nextstate
 
     for token in tokens:
-        if token.v in keywords:
+        if token.v in ['bool', 'int', 'real', 'string']:
+            token.t = 'TYPE'
+        elif token.v in keywords:
             token.t = token.v.upper()
 
     return tokens

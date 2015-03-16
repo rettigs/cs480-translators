@@ -1,10 +1,13 @@
 class TreeNode(object):
-    def __init__(self, value=None, parent=None, children=list([])):
+    def __init__(self, value=None, parent=None, children=None):
         self.value = value
         self.parent = parent
         if self.parent is not None:
             self.root = self.parent.root
-        self.children = children
+        if children is None:
+            self.children = []
+        else:
+            self.children = children
 
     def printNode(self, level):
         indent = "    " * level

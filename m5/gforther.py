@@ -125,40 +125,7 @@ class Gforther(object):
         except:
             pass
 
-    def convertTokens(self):
-        prevWasString = False
-        prevWasReal = False
-        for token in self.tokens:
-            try:
-                convert = False
-
-                if prevWasString and token.v == '+':
-                    token.v = 'append'
-                prevWasString = False
-
-                if token.v in self.conversions:
-                    token.v = self.conversions[token.v]
-
-                if prevWasReal:
-                    if token.v in self.realConversions:
-                        token.v = self.realConversions[token.v]
-                    if token.t == 'INT':
-                        convert = True
-                
-                if token.t == 'REAL':
-                    prevWasReal = True
-
-                if token.t == 'STRING':
-                    prevWasString = True
-                    token.v = re.sub('^"', 's" ', token.v)
-
-                self.gforth.append(token.v)
-
-                if convert:
-                    self.gforth.append('s>f')
-
-            except:
-                pass
+            i += 1
 
 if __name__ == '__main__':
     gforther = Gforther()
