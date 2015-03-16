@@ -34,7 +34,10 @@ class Gforther(object):
 
         self.conversions = {
                 "%": "mod",
-                "!=": "<>"
+                "!=": "<>",
+                "sin": "fsin",
+                "cos": "fcos",
+                "tan": "ftan"
         }
         self.realConversions = {
                 "+": "f+",
@@ -47,10 +50,10 @@ class Gforther(object):
                 ">": "f>",
                 ">=": "f>=",
                 "=": "f=",
-                "<>": "f<>",
-                "sin": "fsin",
-                "cos": "fcos",
-                "tan": "ftan",
+                "<>": "f<>"
+        }
+        self.stringConversions = {
+                "+": "s+"
         }
 
         # Parse arguments
@@ -97,6 +100,8 @@ class Gforther(object):
         if self.verbose >= 1:
             print "Tree:"
             tree.printTree()
+
+        self.gforthPass(tree.root)
 
         # Open output file
         if self.outfilename is not None:
@@ -155,16 +160,49 @@ class Gforther(object):
         if node.value != "" and node.value.t != 'CF' and node.value.t is None:
             if len(node.children) == 1:
                 node.value.t = node.children[0].value.t
-            if len(node.children) == 2:
+            elif len(node.children) == 2:
                 if node.children[0].value.t == node.children[1].value.t:
                     node.value.t = node.children[0].value.t
                 else:
                     node.value.t = 'REAL'
 
+        # Convert operations to gforth-compatible ones
+        if node.value != "" and node.value.f == 'OP':
+            if node.value.v in self.conversions:
+                node.value.v = self.conversions[node.value.v]
+
+        # Convert reals and strings to gforth-compatible formats
+        if node.value != "" and node.value.f == 'CONST' and node.value.t == 'REAL':
+            if re.search('e', node.value.v) is None:
+                node.value.v = re.sub('$', 'e', node.value.v)
+        if node.value != "" and node.value.f == 'CONST' and node.value.t == 'STRING':
+            node.value.v = re.sub('^"', 's" ', node.value.v)
+
+        # Convert int operations to real/string operations if necessary
+        if node.value != "" and node.value.f == 'OP':
+            if node.value.t == 'REAL' and node.value.v in self.realConversions:
+                node.value.v = self.realConversions[node.value.v]
+            if node.value.t == 'STRING' and node.value.v in self.stringConversions:
+                node.value.v = self.stringConversions[node.value.v]
+
     def getVarInScope(self, varname):
         for symbol, scope in self.scopeStack[::-1]:
             if symbol.v == varname:
                 return symbol
+
+    def gforthPass(self, node):
+
+        # Recurse through children
+        for child in node.children:
+            self.gforthPass(child)
+
+            # Make Gforth
+
+            self.gforth.append(child.value.v)
+
+            if node.value != "":
+                if node.value.t != child.value.t:
+                    self.gforth.append('s>f')
 
 if __name__ == '__main__':
     gforther = Gforther()
