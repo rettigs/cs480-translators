@@ -125,14 +125,19 @@ class SyntaxTree(object):
                 children[scopeDepth] = []
                 self.vprint("{}Found CLOSE; opening new scope".format("  "*scopeDepth), 3)
             elif tok[i].t == "OPEN":
-                newParent = children[scopeDepth][0]
-                newChildren = children[scopeDepth][1:]
-                self.vprint("{}Found OPEN; closing scope and setting children of '{}' to '{}'".format("  "*scopeDepth, newParent.value, [str(c.value) for c in newChildren]), 3)
-                newParent.children = newChildren
+                if i + 1 < len(tok) and tok[i+1].t == "LET":
+                    children[scopeDepth-1] = children[scopeDepth]
+                    del children[scopeDepth]
+                    scopeDepth -= 1
+                else:
+                    newParent = children[scopeDepth][0]
+                    newChildren = children[scopeDepth][1:]
+                    self.vprint("{}Found OPEN; closing scope and setting children of '{}' to '{}'".format("  "*scopeDepth, newParent.value, [str(c.value) for c in newChildren]), 3)
+                    newParent.children.extend(newChildren)
 
-                del children[scopeDepth]
-                scopeDepth -= 1
-                children[scopeDepth].insert(0, newParent)
+                    del children[scopeDepth]
+                    scopeDepth -= 1
+                    children[scopeDepth].insert(0, newParent)
             else:
                 newSymbol = self.createSymbolFromToken(tok[i])
                 newSymbol.s = scopeDepth

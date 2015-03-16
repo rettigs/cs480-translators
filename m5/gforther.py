@@ -121,6 +121,10 @@ class Gforther(object):
         for child in node.children:
             self.varTypePass(child)
 
+    def letVars(self, node):
+        for child in node.children:
+            self.letVars(child)
+
 if __name__ == '__main__':
     gforther = Gforther()
     gforther.main()
