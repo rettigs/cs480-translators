@@ -56,9 +56,9 @@ class Parser(object):
         self.prods['EXPRLIST'] = [['EXPR', 'EXPRLISTP']]
         self.prods['EXPRLISTP'] = [['EXPRLIST'], []]
         self.prods['LETSTMTS'] = [['OPEN', 'LET', 'OPEN', 'VARLIST', 'CLOSE', 'CLOSE']]
-        self.prods['VARLIST'] = [['OPEN', 'NAME', 'TYPE', 'CLOSE', 'VARLISTP']]
+        self.prods['VARLIST'] = [['OPEN', 'NAME', 'VARTYPE', 'CLOSE', 'VARLISTP']]
         self.prods['VARLISTP'] = [['VARLIST'], []]
-        self.prods['TYPE'] = [['BOOL'], ['INT'], ['REAL'], ['STRING']]
+        self.prods['VARTYPE'] = [['TYPE']]
 
         # Defaults
         self.infile = sys.stdin
@@ -105,6 +105,10 @@ class Parser(object):
 
         # Clean up input file
         self.infile.close()
+        
+        if not result:
+            print "Parse Error"
+            exit(1)
 
         # Open output file
         if self.outfilename is not None:
