@@ -85,8 +85,7 @@ class Gforther(object):
         # Clean up input file
         self.infile.close()
 
-        self.traverse(tree.root)
-        self.convertTokens()
+        self.varTypePass(tree.root)
 
         # Open output file
         if self.outfilename is not None:
@@ -117,15 +116,10 @@ class Gforther(object):
         if self.verbose >= level:
             print message
 
-    def traverse(self, node):
+    def varTypePass(self, node):
+        print node.value
         for child in node.children:
-            self.traverse(child)
-        try:
-            self.tokens.append(node.value)
-        except:
-            pass
-
-            i += 1
+            self.varTypePass(child)
 
 if __name__ == '__main__':
     gforther = Gforther()

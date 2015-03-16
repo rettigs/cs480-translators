@@ -24,6 +24,8 @@ class SyntaxTree(object):
         self.verbose = 0
         self.tokens = []
         self.curTokenNumber = -1
+        self.doReturn = False
+        self.returns = 0
 
     def main(self):
         # Defaults
@@ -62,14 +64,14 @@ class SyntaxTree(object):
             token = eval(line)
             token.level = level
             self.tokens.append(token)
+        self.tokens = self.tokens[::-1]
             
         self.vprint(self.tokens, 2)
 
         # Create parse tree
         self.tree = Tree()
         self.tree.root.value = ""
-        while self.curTokenNumber + 1 < len(self.tokens):
-            self.makeSyntaxTree(self.tree.root, 0, 0)
+        self.makeSyntaxTree(self.tree.root)
 
         if self.verbose >= 1:
             self.tree.printTree()
@@ -109,34 +111,36 @@ class SyntaxTree(object):
         if self.verbose >= level:
             print message
 
-    def makeSyntaxTree(self, parent, scopeDepth, treeDepth):
-        indent = "  " * treeDepth
-        self.curTokenNumber += 1
-        curToken = self.tokens[self.curTokenNumber]
-        if curToken.t == "OPEN":
-            self.vprint("{}CurToken: {}, {}: Increasing scopeDepth and recursing".format(indent, self.curTokenNumber, curToken), 3)
-            self.wasPrevTokenOpen = True
-            self.makeSyntaxTree(parent, scopeDepth+1, treeDepth)
-        elif curToken.t == "CLOSE":
-            self.vprint("{}CurToken: {}, {}: Decreasing scopeDepth and returning".format(indent, self.curTokenNumber, curToken), 3)
-            self.wasPrevTokenOpen = False
-            return
-        else:
-            if self.wasPrevTokenOpen: # If we're the first non-paren after an open paren, we're a parent
-                self.wasPrevTokenOpen = False
-                newSymbol = self.createSymbolFromToken(curToken)
+    def makeSyntaxTree(self, root):
+        children = {}
+        scopeDepth = 0
+        children[0] = []
+        tok = self.tokens
+        i = self.curTokenNumber
+        while i + 1 < len(tok):
+            i += 1
+            self.vprint("{}curToken: {}, {}".format("  "*scopeDepth, i, tok[i]), 3)
+            if tok[i].t == "CLOSE":
+                scopeDepth += 1
+                children[scopeDepth] = []
+                self.vprint("{}Found CLOSE; opening new scope".format("  "*scopeDepth), 3)
+            elif tok[i].t == "OPEN":
+                newParent = children[scopeDepth][0]
+                newChildren = children[scopeDepth][1:]
+                self.vprint("{}Found OPEN; closing scope and setting children of '{}' to '{}'".format("  "*scopeDepth, newParent.value, [str(c.value) for c in newChildren]), 3)
+                newParent.children = newChildren
+
+                del children[scopeDepth]
+                scopeDepth -= 1
+                children[scopeDepth].insert(0, newParent)
+            else:
+                newSymbol = self.createSymbolFromToken(tok[i])
                 newSymbol.s = scopeDepth
                 newNode = TreeNode(value=newSymbol)
-                parent.children.append(newNode)
-                self.vprint("{}CurToken: {}, {}: Making new node '{}' with parent '{}' and recursing to create children".format(indent, self.curTokenNumber, curToken, newNode.value, parent.value), 3)
-                self.makeSyntaxTree(newNode, scopeDepth, treeDepth+1)
-            else: # If we're a non-paren after another non-paren, we're it's child
-                newSymbol = self.createSymbolFromToken(curToken)
-                newSymbol.s = scopeDepth
-                newNode = TreeNode(value=newSymbol)
-                parent.children.append(newNode)
-                self.vprint("{}CurToken: {}, {}: Making new node '{}' with parent '{}' and recursing to create siblings".format(indent, self.curTokenNumber, curToken, newNode.value, parent.value), 3)
-                self.makeSyntaxTree(parent, scopeDepth, treeDepth)
+                self.vprint("{}Adding terminal to scope".format("  "*scopeDepth), 3)
+                children[scopeDepth].insert(0, newNode)
+
+        root.children = children[0]
 
     @staticmethod
     def createSymbolFromToken(tok):
