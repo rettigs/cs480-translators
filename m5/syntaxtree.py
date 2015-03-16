@@ -67,18 +67,11 @@ class SyntaxTree(object):
 
         # Create parse tree
         self.tree = Tree()
-        self.tree.root.value = "root"
-        print len(self.tokens)
+        self.tree.root.value = ""
         while self.curTokenNumber + 1 < len(self.tokens):
             self.makeSyntaxTree(self.tree.root, 0, 0)
 
-        print ""
-        print "Tree:"
-        self.tree.printTree()
-
         if self.verbose >= 1:
-            print ""
-            print "Tree:"
             self.tree.printTree()
 
         # Clean up input file
@@ -121,11 +114,11 @@ class SyntaxTree(object):
         self.curTokenNumber += 1
         curToken = self.tokens[self.curTokenNumber]
         if curToken.t == "OPEN":
-            print "{}CurToken: {}, {}: Increasing scopeDepth and recursing".format(indent, self.curTokenNumber, curToken)
+            self.vprint("{}CurToken: {}, {}: Increasing scopeDepth and recursing".format(indent, self.curTokenNumber, curToken), 3)
             self.wasPrevTokenOpen = True
             self.makeSyntaxTree(parent, scopeDepth+1, treeDepth)
         elif curToken.t == "CLOSE":
-            print "{}CurToken: {}, {}: Decreasing scopeDepth and returning".format(indent, self.curTokenNumber, curToken)
+            self.vprint("{}CurToken: {}, {}: Decreasing scopeDepth and returning".format(indent, self.curTokenNumber, curToken), 3)
             self.wasPrevTokenOpen = False
             return
         else:
@@ -135,14 +128,14 @@ class SyntaxTree(object):
                 newSymbol.s = scopeDepth
                 newNode = TreeNode(value=newSymbol)
                 parent.children.append(newNode)
-                print "{}CurToken: {}, {}: Making new node '{}' with parent '{}' and recursing to create children".format(indent, self.curTokenNumber, curToken, newNode.value, parent.value)
+                self.vprint("{}CurToken: {}, {}: Making new node '{}' with parent '{}' and recursing to create children".format(indent, self.curTokenNumber, curToken, newNode.value, parent.value), 3)
                 self.makeSyntaxTree(newNode, scopeDepth, treeDepth+1)
             else: # If we're a non-paren after another non-paren, we're it's child
                 newSymbol = self.createSymbolFromToken(curToken)
                 newSymbol.s = scopeDepth
                 newNode = TreeNode(value=newSymbol)
                 parent.children.append(newNode)
-                print "{}CurToken: {}, {}: Making new node '{}' with parent '{}' and recursing to create siblings".format(indent, self.curTokenNumber, curToken, newNode.value, parent.value)
+                self.vprint("{}CurToken: {}, {}: Making new node '{}' with parent '{}' and recursing to create siblings".format(indent, self.curTokenNumber, curToken, newNode.value, parent.value), 3)
                 self.makeSyntaxTree(parent, scopeDepth, treeDepth)
 
     @staticmethod
