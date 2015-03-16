@@ -22,6 +22,7 @@ class Gforther(object):
         self.debug = 0
         self.verbose = 0
         self.tokens = []
+        self.scopeStack = []
         self.gforth = []
 
     def main(self):
@@ -79,13 +80,23 @@ class Gforther(object):
         tree = pickle.load(self.infile)
 
         if self.verbose >= 1:
-            print ""
+            print "Tree:"
             tree.printTree()
 
         # Clean up input file
         self.infile.close()
 
         self.varTypePass(tree.root)
+
+        if self.verbose >= 1:
+            print "Scope stack:"
+            print self.scopeStack
+
+        self.typeCastPass(tree.root)
+
+        if self.verbose >= 1:
+            print "Tree:"
+            tree.printTree()
 
         # Open output file
         if self.outfilename is not None:
@@ -117,13 +128,43 @@ class Gforther(object):
             print message
 
     def varTypePass(self, node):
-        print node.value
         for child in node.children:
-            self.varTypePass(child)
+            if child.value.f == 'CF' and child.value.v == 'let':
+                self.letVars(child)
+            else:
+                self.varTypePass(child)
 
     def letVars(self, node):
         for child in node.children:
-            self.letVars(child)
+            var = child.value
+            var.t = child.children[0].value.v.upper()
+            varscope = node.value.s
+            self.scopeStack.append((var, varscope))
+
+    def typeCastPass(self, node):
+
+        # Set types for all variable uses
+        if node.value != "" and node.value.f == 'VAR':
+            node.value.t = self.getVarInScope(node.value.v).t
+
+        # Recurse through children
+        for child in node.children:
+            self.typeCastPass(child)
+
+        # Infer types of expressions
+        if node.value != "" and node.value.t != 'CF' and node.value.t is None:
+            if len(node.children) == 1:
+                node.value.t = node.children[0].value.t
+            if len(node.children) == 2:
+                if node.children[0].value.t == node.children[1].value.t:
+                    node.value.t = node.children[0].value.t
+                else:
+                    node.value.t = 'REAL'
+
+    def getVarInScope(self, varname):
+        for symbol, scope in self.scopeStack[::-1]:
+            if symbol.v == varname:
+                return symbol
 
 if __name__ == '__main__':
     gforther = Gforther()

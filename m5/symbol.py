@@ -10,3 +10,6 @@ class SymbolNode(object):
             return "Sym({}, {}, \"{}\", {})".format(self.f, self.t, self.v.replace('"','\\"').replace('\n', '\\n'), self.s)
         else:
             return "Sym({}, {}, \"{}\", {})".format(self.f, self.t, self.v, self.s)
+
+    def __repr__(self):
+        return str(self)
